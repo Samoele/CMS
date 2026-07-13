@@ -4,11 +4,14 @@ namespace Library.CMS.Models
 {
     public class Course
     {
-        public string Code { get; set; } = string.Empty; // ex: "COP4870"
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public List<User> EnrolledStudents { get; set; } = new List<User>();
-        public List<Assignment> Assignments { get; set; } = new List<Assignment>();
+        
+        // Relationships
+        public List<Student> Roster { get; set; } = new List<Student>();
         public List<Module> Modules { get; set; } = new List<Module>();
+        public List<Assignment> Assignments { get; set; } = new List<Assignment>();
     }
 }
