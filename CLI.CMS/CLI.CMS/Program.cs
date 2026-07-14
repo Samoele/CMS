@@ -365,18 +365,16 @@ namespace ConsoleApp1
                         AddModuleForm(course, proxy);
                         break;
                     case "2":
-                        // Placeholder for Issue #19
+                        // Adds text vcontent to a module inside a course
                         AddContentToModuleForm(course, proxy);
                         break;
                     case "3":
-                        // Placeholder for Issue #20
-                        Console.WriteLine("\nPlaceholder: Modify Content");
-                        Console.ReadKey();
+                        // Modify content in a module
+                        ModifyContentInModuleForm(course, proxy);
                         break;
                     case "4":
-                        // Placeholder for Issue #21
-                        Console.WriteLine("\nPlaceholder: Remove Content");
-                        Console.ReadKey();
+                        // Remove content from module
+                        RemoveContentFromModuleForm(course, proxy);
                         break;
                     case "5":
                         inModulesMenu = false;
@@ -428,6 +426,157 @@ namespace ConsoleApp1
                     else
                     {
                         Console.WriteLine("\nCancelled. Content cannot be blank.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"\nError: Module with ID {targetModuleId} not found.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("\nInvalid ID entry.");
+            }
+
+            Console.WriteLine("\nPress any key to return...");
+            Console.ReadKey();
+        }
+
+
+        //Form for modifying content in a module
+        static void ModifyContentInModuleForm(Course course, SiteServiceProxy proxy)
+        {
+            Console.Clear();
+            Console.WriteLine($"--- Modify Module Content ({course.Code}) ---");
+
+            if (course.Modules.Count == 0)
+            {
+                Console.WriteLine("No modules exist in this course yet.");
+                Console.WriteLine("\nPress any key to return...");
+                Console.ReadKey();
+                return;
+            }
+
+            // List available modules
+            Console.WriteLine("Available Modules:");
+            foreach (var mod in course.Modules)
+            {
+                Console.WriteLine($"[Module ID: {mod.Id}] (Contains {mod.Content.Count} items)");
+            }
+            Console.WriteLine("--------------------------------------");
+
+            Console.Write("Enter the ID of the module to modify: ");
+            if (int.TryParse(Console.ReadLine(), out int targetModuleId))
+            {
+                var targetModule = proxy.GetModuleFromCourse(course.Id, targetModuleId);
+
+                if (targetModule != null)
+                {
+                    if (targetModule.Content.Count == 0)
+                    {
+                        Console.WriteLine("\nThis module has no content items to modify.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("\nContent Items:");
+                        for (int i = 0; i < targetModule.Content.Count; i++)
+                        {
+                            Console.WriteLine($"[{i}] {targetModule.Content[i]}");
+                        }
+                        Console.WriteLine("--------------------------------------");
+
+                        Console.Write("Enter the index number of the item to modify: ");
+                        if (int.TryParse(Console.ReadLine(), out int targetIndex) && targetIndex >= 0 && targetIndex < targetModule.Content.Count)
+                        {
+                            Console.WriteLine($"\nCurrent text: \"{targetModule.Content[targetIndex]}\"");
+                            Console.Write("Enter the new text: ");
+                            string updatedText = Console.ReadLine() ?? string.Empty;
+
+                            if (!string.IsNullOrWhiteSpace(updatedText))
+                            {
+                                targetModule.Content[targetIndex] = updatedText;
+                                Console.WriteLine("\nSuccess! Content item updated.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("\nCancelled. Content cannot be blank.");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nInvalid index selection.");
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"\nError: Module with ID {targetModuleId} not found.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("\nInvalid ID entry.");
+            }
+
+            Console.WriteLine("\nPress any key to return...");
+            Console.ReadKey();
+        }
+
+
+        //Method for deleting a module in module menu
+        static void RemoveContentFromModuleForm(Course course, SiteServiceProxy proxy)
+        {
+            Console.Clear();
+            Console.WriteLine($"--- Remove Module Content ({course.Code}) ---");
+
+            if (course.Modules.Count == 0)
+            {
+                Console.WriteLine("No modules exist in this course yet.");
+                Console.WriteLine("\nPress any key to return...");
+                Console.ReadKey();
+                return;
+            }
+
+            // List available modules
+            Console.WriteLine("Available Modules:");
+            foreach (var mod in course.Modules)
+            {
+                Console.WriteLine($"[Module ID: {mod.Id}] (Contains {mod.Content.Count} items)");
+            }
+            Console.WriteLine("--------------------------------------");
+
+            Console.Write("Enter the ID of the module to remove content from: ");
+            if (int.TryParse(Console.ReadLine(), out int targetModuleId))
+            {
+                var targetModule = proxy.GetModuleFromCourse(course.Id, targetModuleId);
+
+                if (targetModule != null)
+                {
+                    if (targetModule.Content.Count == 0)
+                    {
+                        Console.WriteLine("\nThis module has no content items to remove.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("\nContent Items:");
+                        for (int i = 0; i < targetModule.Content.Count; i++)
+                        {
+                            Console.WriteLine($"[{i}] {targetModule.Content[i]}");
+                        }
+                        Console.WriteLine("--------------------------------------");
+
+                        Console.Write("Enter the index number of the item to remove: ");
+                        if (int.TryParse(Console.ReadLine(), out int targetIndex) && targetIndex >= 0 && targetIndex < targetModule.Content.Count)
+                        {
+                            string removedText = targetModule.Content[targetIndex];
+                            targetModule.Content.RemoveAt(targetIndex);
+                            
+                            Console.WriteLine($"\nSuccess! Permanently removed: \"{removedText}\"");
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nInvalid index selection.");
+                        }
                     }
                 }
                 else
