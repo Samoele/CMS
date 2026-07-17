@@ -133,6 +133,24 @@ namespace Library.CMS.Services
             }
             return false;
         }
+
+        public bool AddAssignment(int courseId, Assignment assignment)
+        {
+            var course =  GetCourseById(courseId);
+            if (course != null)
+            {
+                //create a unique ID for the assignment within this course's assignment list
+                int nextId = course.Assignments.Count > 0 ? course.Assignments.Max(a => a.Id) + 1 : 1;
+                assignment.Id = nextId;
+
+                course.Assignments.Add(assignment);
+                return true;
+            }
+            return false;
+            
+        }
+
+
         
 
 
