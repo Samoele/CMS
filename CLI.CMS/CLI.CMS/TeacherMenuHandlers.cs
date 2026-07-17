@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 using Library.CMS.Models;
 using Library.CMS.Services;
 
@@ -126,7 +127,7 @@ namespace CLI.CMS.Handlers
 
         }
 
-        //Course management menu for teachers to manage a specific course
+        //Course management menu for teachers to manage a specific course (assignments, modules, enrollment, grading)
         static void RunCourseManagementMenu(Course course, SiteServiceProxy proxy)
         {
             bool inCourseMenu = true;
@@ -154,18 +155,18 @@ namespace CLI.CMS.Handlers
                 switch (choice)
                 {
                     case "1":
-                        // Will map to Issue #23
+                        //Updates description of a course
                         UpdateCourseDescriptionForm(course);
                         Console.ReadKey();
                         break;
                     case "2":
-                        // Will map to Issue #22
+                        // Deletes description of a course
                         DeleteCourseForm(course, proxy);
                         inCourseMenu = false; // Exit the course management menu after deletion
                         break;
                     case "3":
-                        // Will map to Issue #12
-                        Console.WriteLine("\nPlaceholder: Manage Roster");
+                        // Covers enrolling and unenrolling students
+                        RosterManagementMenu(course, proxy);
                         Console.ReadKey();
                         break;
                     case "4":
@@ -552,6 +553,211 @@ namespace CLI.CMS.Handlers
             Console.WriteLine("\nPress any key to return...");
             Console.ReadKey();
         }
+
+        //Roster management menu for teachers to manage student enrollment in a specific course
+        private static void RosterManagementMenu(Course course, SiteServiceProxy proxy)
+        {
+            bool inRosterMenu = true;
+            while (inRosterMenu)
+            {
+                Console.Clear();
+                Console.WriteLine("======================================");
+                Console.WriteLine($"  {course.Code} - Roster Management");
+                Console.WriteLine("======================================");
+
+
+                if (course.Roster.Count == 0)
+                {
+                    Console.WriteLine("\n No students are currently enrolled in this course.");
+                }
+                else
+                {
+                    Console.WriteLine("\nCurrent Roster:");
+                    foreach (var student in course.Roster)
+                    {
+                        Console.WriteLine($"ID: {student.Id} - {student.Name} - {student.Code} - {student.Classification}");
+                    }
+                }
+                Console.WriteLine("--------------------------------------");
+                Console.WriteLine("[1] View Roster");
+                Console.WriteLine("[2] Enroll Student");
+                Console.WriteLine("[3] Remove Student");
+                Console.WriteLine("[4] Return to Course Management Menu");
+                Console.WriteLine("======================================");
+
+                Console.Write("Enter choice (1-4):");
+                string? choice = Console.ReadLine();
+                
+                switch (choice)
+                {
+                    case "1":
+                    //Logic to view the course roster
+                        ViewCourseRoster(course);
+                        break;
+                    case "2":
+                    //Logic to enroll a student into the course
+                        EnrollStudentForm(course, proxy);
+                        break;
+                    case "3":
+                    //Logic to remove a student from the course
+                        UnenrollStudentForm(course, proxy);
+                        break;
+                    case "4":
+                    //Logic to return to course management menu
+                        inRosterMenu = false;
+                        break;
+                    default:
+                        Console.WriteLine("\nInvalid choice. Press any key to try again...");
+                        Console.ReadKey();
+                        break;
+                }
+
+            }
+
+        }
+
+        private static void EnrollStudentForm(Course course, SiteServiceProxy proxy)
+        {
+            Console.Clear();
+            Console.WriteLine("--Enroll a Student--");
+            //fetch all university students from our database (future db)
+            var allStudents = proxy.GetStudents();
+
+            if (allStudents.Count == 0)
+            {
+                Console.WriteLine("No students registered in the database.");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.WriteLine("Available University Students");
+            foreach (var s in allStudents)
+            {
+                if (!course.Roster.Any(r => r.Id == s.Id))
+                {
+                    //Don't show them if already in the course
+                    //If Roster has same ID, then do not show those students
+                    Console.WriteLine($"ID: {s.Id} - {s.Name} - {s.Classification}");
+                }
+            }
+            Console.WriteLine("--------------------------------------");
+            Console.WriteLine("Enter the Student ID to enroll:");
+            if (int.TryParse(Console.ReadLine(), out int studentId))
+            {
+                if (proxy.EnrollStudent(course.Id, studentId))
+                {
+                    Console.WriteLine("\nStudent succesfully added to Course Roster");
+                }
+                else
+                {
+                    Console.WriteLine("\nFailed to enroll student. Invalid ID");
+
+                }
+            }
+            Console.ReadKey();
+        }
+
+        //Menu options for unenrolling a student
+        private static void UnenrollStudentForm(Course course, SiteServiceProxy proxy)
+        {
+            Console.Clear();
+            Console.WriteLine("--Unenroll a Student--");
+            if (course.Roster.Count == 0)
+            {
+                Console.WriteLine("No students enrolled in the course");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.WriteLine("Enter the ID of the student to be removed from the course: ");
+            if (int.TryParse(Console.ReadLine(), out int studentId))
+            {
+                if (proxy.UnenrollStudent(course.Id, studentId))
+                {
+                    Console.WriteLine("\nSuccess! Student succesfully removed from the course");
+                }
+                else
+                {
+                    Console.WriteLine("Error: Student ID not found in the course roster");
+                }
+            }
+            Console.ReadKey();
+
+
+        }
+
+        //Logic to view full roster in a course
+        private static void ViewCourseRoster(Course course)
+        {
+            Console.Clear();
+            Console.WriteLine($"======================================");
+            Console.WriteLine($"      {course.Code} Official Roster    ");
+            Console.WriteLine($"======================================");
+
+            if (course.Roster.Count == 0)
+            {
+                Console.WriteLine("No students are currently enrolled in this course.");
+            }
+            else
+            {
+                // Formatting table like headers for better visual clarity
+                Console.WriteLine(string.Format("{0,-6} | {1,-18} | {2,-15}", "ID", "Name", "Classification"));
+                Console.WriteLine("------------------------------------------------");
+                
+                foreach (var student in course.Roster)
+                {
+                    Console.WriteLine(string.Format("{0,-6} | {1,-18} | {2,-15}", 
+                        student.Id, 
+                        student.Name, 
+                        student.Classification));
+                }
+            }
+
+            Console.WriteLine("======================================");
+            Console.WriteLine("\nPress any key to return to Roster Menu...");
+            Console.ReadKey();
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     }
 }

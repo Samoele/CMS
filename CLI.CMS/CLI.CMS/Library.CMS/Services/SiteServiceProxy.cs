@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Generic; //Includes add and delete methods for lists built in
 using System.Linq;
 using Library.CMS.Models;
 
@@ -37,7 +37,7 @@ namespace Library.CMS.Services
         /// Filters our user list to return only objects that are derived Student models
         public List<Student> GetStudents()
         {
-            return Users.OfType<Student>().ToList();
+            return Users.OfType<Student>().ToList(); //Uses LINQ library to get all users that are of type Student and returns them as a list
         }
 
         /// Sets the active application user to a specific student by their unique Id.
@@ -101,6 +101,42 @@ namespace Library.CMS.Services
             var course = GetCourseById(courseId);
             return course?.Modules.FirstOrDefault(m => m.Id == moduleId);
         }
+
+
+        //Enrollment of students in a course roster
+        public bool EnrollStudent(int courseId, int studentId)
+        {
+            var course = GetCourseById(courseId);
+            var student = Users.OfType<Student>().FirstOrDefault(s => s.Id == studentId);
+
+            if (course != null && student != null)
+            {
+                course.Roster.Add(student);
+                return true;
+                
+            }
+            return false;
+
+        }
+
+        public bool UnenrollStudent(int courseId, int studentId) //methods for enrollment need CLI menu
+        {
+            var course = GetCourseById(courseId);
+            if (course != null)
+            {
+                var studentToRemove = course.Roster.FirstOrDefault(s => s.Id == studentId);
+                if (studentToRemove != null)
+                {
+                    course.Roster.Remove(studentToRemove); //Removes student from course roster
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+
+
+    
 
 
 
