@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Linq.Expressions;
 using Library.CMS.Models;
 using Library.CMS.Services;
@@ -171,7 +172,7 @@ namespace CLI.CMS.Handlers
                         break;
                     case "4":
                         // Will map to Issues #13 & #17
-                        Console.WriteLine("\nPlaceholder: Manage Assignments");
+                        RunAssignmentsMenu(course, proxy);
                         Console.ReadKey();
                         break;
                     case "5":
@@ -716,6 +717,198 @@ namespace CLI.CMS.Handlers
             Console.WriteLine("======================================");
             Console.WriteLine("\nPress any key to return to Roster Menu...");
             Console.ReadKey();
+        }
+
+
+        private static void RunAssignmentsMenu(Course course, SiteServiceProxy proxy)
+        {
+            bool inAssignmentsMenu = true;
+
+            while (inAssignmentsMenu)
+            {
+                Console.Clear();
+                Console.WriteLine("======================================");
+                Console.WriteLine($"  {course.Code} - Assignment Management");
+                Console.WriteLine("======================================");
+
+                if (course.Assignments.Count == 0)
+                {
+                    Console.WriteLine("No assignments exist in this course yet.");
+                }
+                else
+                {
+                    Console.WriteLine($"{"ID",-5} | {"Name",-15} | {"Description",-20} | {"Due Date",-12} | {"Total Points",-12}");
+                    Console.WriteLine(new string('-', 76)); //same as long line of dashes
+                    foreach (var assignment in course.Assignments)
+                    {
+
+                        string nameDisplay = assignment.Name.Length > 15 
+                            ? assignment.Name.Substring(0, 12) + "..." 
+                            : assignment.Name;
+                
+                        string descDisplay = assignment.Description.Length > 20 
+                            ? assignment.Description.Substring(0, 17) + "..." 
+                            : assignment.Description;
+
+                        string dateDisplay = assignment.DueDate.ToString("MM/dd/yyyy");
+
+                        Console.WriteLine($"{assignment.Id,-5} | {nameDisplay,-15} | {descDisplay,-20} | {dateDisplay,-12} | {assignment.TotalPoints,-12}");
+                            
+                    }
+                }
+                Console.WriteLine("--------------------------------------");
+                Console.WriteLine("1. Add a New Assignment");
+                Console.WriteLine("2. Edit an Existing Assignment");
+                Console.WriteLine("3. Return to Course Menu");
+                Console.WriteLine("======================================");
+                Console.Write("Enter choice (1-3): ");
+
+                string choice = (Console.ReadLine() ?? string.Empty).Trim();
+
+                switch (choice)
+                {
+                    case "1":
+                        CreateAssignmentForm(course, proxy);
+                        break;
+                    case "2":
+                        EditAssignmentForm(course, proxy);
+                        Console.ReadKey();
+                        break;
+                    case "3":
+                        inAssignmentsMenu = false;
+                        break;
+                    default:
+                        Console.WriteLine($"\nInvalid choice '{choice}'. Press any key to try again...");
+                        Console.ReadKey();
+                        break;
+                }
+            }
+        }
+
+    private static void CreateAssignmentForm(Course course, SiteServiceProxy proxy)
+    {
+        Console.Clear();
+        Console.WriteLine($"--- Create New Assignment for {course.Code} ---");
+
+        Console.Write("Enter Assignment Name: ");
+        string name = Console.ReadLine() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            Console.WriteLine("\nAssignment creation cancelled. Name cannot be blank.");
+            Console.ReadKey();
+            return;
+        }
+
+        Console.Write("Enter Assignment Description: ");
+        string description = Console.ReadLine() ?? string.Empty;
+
+        Console.Write("Enter Maximum Points Possible: ");
+        if (!int.TryParse(Console.ReadLine(), out int maxPoints) || maxPoints < 0)
+        {
+            Console.WriteLine("\nInvalid points entered. Defaulting to 100 points.");
+            maxPoints = 100;
+        }
+
+        // Get due date accurately using DateTime
+        Console.Write("Enter Due Date (MM/dd/yyyy): ");
+        if (!DateTime.TryParse(Console.ReadLine(), out DateTime dueDate))
+        {
+            Console.WriteLine("\nInvalid date format. Defaulting to one week from today.");
+            dueDate = DateTime.Today.AddDays(7);
+        }        
+
+
+        var newAssignment = new Assignment
+        {
+            Name = name,
+            Description = description,
+            DueDate = dueDate,
+            TotalPoints = maxPoints
+        };
+
+        proxy.AddAssignment(course.Id, newAssignment);
+
+        Console.WriteLine($"\nSuccess! Assignment '{name}' created with local ID: {newAssignment.Id}");
+        Console.WriteLine("\nPress any key to return...");
+        Console.ReadKey();
+    }
+
+    private static void EditAssignmentForm(Course course, SiteServiceProxy proxy)
+        {
+            Console.Clear();
+            Console.WriteLine($"--Edit Assignment ({course.Code}) ---");
+
+            if (course.Assignments.Count == 0)
+            {
+                Console.WriteLine("No assignments exist in this course yet.");
+                Console.WriteLine("\nPress any key to return...");
+                Console.ReadKey();
+                return;
+                
+            }
+
+            Console.WriteLine("--------------------------------------");
+            Console.WriteLine("Enter the ID of assignment to edit: ");
+            if (int.TryParse(Console.ReadLine(), out int targetId))
+            {
+                var assignment = course.Assignments.FirstOrDefault(a => a.Id == targetId);
+
+                if (assignment != null)
+                {
+                    Console.Clear();
+                    Console.WriteLine($"--- Editing Assignment [ID: {assignment.Id}] ---");
+                    
+                    //edit name of assignment
+                    Console.WriteLine($"Current Name: {assignment.Name}");
+                    Console.Write("Enter new name (leave blank to keep current): ");
+                    string newName = Console.ReadLine() ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(newName))
+                    {
+                        assignment.Name = newName;
+                    }
+
+                    //edit assignment desc
+                    Console.WriteLine($"\nCurrent Description: {assignment.Description}");
+                    Console.Write("Enter new description (leave blank to keep current): ");
+                    string newDesc = Console.ReadLine() ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(newDesc))
+                    {
+                        assignment.Description = newDesc;
+                    }
+
+                    //edit total points of assignment
+                    Console.WriteLine($"\nCurrent Max Points: {assignment.TotalPoints}");
+                    Console.Write("Enter new max points (leave blank to keep current): ");
+                    string pointsInput = Console.ReadLine() ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(pointsInput))
+                    {
+                        if (int.TryParse(pointsInput, out int newPoints) && newPoints >= 0)
+                        {
+                            assignment.TotalPoints = newPoints;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid entry. Points left unchanged.");
+                        }
+                        
+                    }
+
+                    Console.WriteLine("Success! Assignment has been edited.");
+                    
+                    
+                }
+                else
+                {
+                    Console.WriteLine($"\nError: Assignment with ID {targetId} not found.");
+                }
+
+            }
+            else
+            {
+                Console.WriteLine("\nInvalid ID selection format.");
+            }
+                Console.WriteLine("\nPress any key to return...");
+                Console.ReadKey();
         }
 
 

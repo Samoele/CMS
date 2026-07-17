@@ -8,7 +8,7 @@ namespace Library.CMS.Models
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public int AvailablePoints { get; set; }
+        public int TotalPoints { get; set; }
         public DateTime DueDate { get; set; }
         
         // Track completed work
