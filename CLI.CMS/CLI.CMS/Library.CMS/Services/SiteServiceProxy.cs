@@ -27,10 +27,42 @@ namespace Library.CMS.Services
 
         private void SeedData()
         {
-            Users.Add(new Student { Id = 1, Name = "Alice", Code = "S001", Classification = "Freshman"});
-            Users.Add(new Student { Id = 2, Name = "Bob", Code = "S002", Classification = "Senior"});
-            Users.Add(new Instructor { Id = 3, Name = "Dr. Smith", Code = "I001", YearsOfExperience = 10});
+            //default students and teacher
+            var alice = new Student { Id = 1, Name = "Alice", Code = "S001", Classification = "Freshman" };
+            var bob = new Student { Id = 2, Name = "Bob", Code = "S002", Classification = "Senior" };
+            var instructor = new Instructor { Id = 3, Name = "Dr. Smith", Code = "I001", YearsOfExperience = 10 };
 
+            Users.Add(alice);
+            Users.Add(bob);
+            Users.Add(instructor);
+
+            //Create a default Course
+            var defaultCourse = new Course
+            {
+                Id = 1,
+                Code = "COP4870",
+                Name = "C# Programming",
+                Description = "Learn how to build enterprise applications using C# and .NET!"
+            };
+
+            // 3. Enroll Alice and Bob into the default course roster automatically
+            defaultCourse.Roster.Add(alice);
+            defaultCourse.Roster.Add(bob);
+
+            // 4. Attach a default Assignment to the course
+            var defaultAssignment = new Assignment
+            {
+                Id = 1,
+                Name = "Assignment 1",
+                Description = "Write a basic Hello World Console App and push it to GitHub.",
+                TotalPoints = 100,
+                DueDate = DateTime.Today.AddDays(7) // Due 1 week from today
+            };
+            
+            defaultCourse.Assignments.Add(defaultAssignment);
+
+            // 5. Add the prepared course to your main course collection
+            Courses.Add(defaultCourse);
         }
 
 
@@ -148,6 +180,44 @@ namespace Library.CMS.Services
             }
             return false;
             
+        }
+
+        //Remove assignment from a course by its assignment ID
+        public bool RemoveAssignmentFromCourse(int courseId, int assignmentId)
+        {
+            var course = GetCourseById(courseId);
+            if (course != null)
+            {
+                var assignmentToRemove = course.Assignments.FirstOrDefault(a => a.Id == assignmentId);
+                if (assignmentToRemove != null)
+                {
+                    course.Assignments.Remove(assignmentToRemove);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        //retrieves all courses with a student in it
+        public List<Course> GetCoursesForStudent(int studentId)
+        {
+            return Courses.Where(c => c.Roster.Any(s => s.Id == studentId)).ToList();
+        }
+
+        //Submits an attempt for a specific assignment.
+        public void SubmitAssignment(int courseId, int assignmentId, Submission submission)
+        {
+            var course = GetCourseById(courseId);
+            var assignment = course?.Assignments.FirstOrDefault(a => a.Id == assignmentId);
+            
+            if (assignment != null)
+            {
+                //sets unique submission ID for this assignment submission
+                int nextId = assignment.Submissions.Count > 0 ? assignment.Submissions.Max(s => s.Id) + 1 : 1;
+                submission.Id = nextId;
+                
+                assignment.Submissions.Add(submission);
+            }
         }
 
 
