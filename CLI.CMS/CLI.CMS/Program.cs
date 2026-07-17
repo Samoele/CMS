@@ -2,6 +2,7 @@
 using Library.CMS.Models;
 using CLI.CMS.Handlers;
 using Library.CMS.Services;
+using ConsoleApp1.Handlers;
 
 namespace ConsoleApp1
 {
@@ -24,7 +25,7 @@ namespace ConsoleApp1
                 switch (choice)
                 {
                     case "1":
-                        RunStudentProxyMenu();
+                        StudentMenuHandlers.RunStudentMenu();
                         break;
                     case "2":
                         TeacherMenuHandlers.RunTeacherMenu();
@@ -40,12 +41,6 @@ namespace ConsoleApp1
 
 
             }
-        }
-
-        static void RunStudentProxyMenu()
-        {
-            // Get the singleton instance of SiteServiceProxy
-
         }
 
 

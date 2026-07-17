@@ -166,22 +166,22 @@ namespace CLI.CMS.Handlers
                         inCourseMenu = false; // Exit the course management menu after deletion
                         break;
                     case "3":
-                        // Covers enrolling and unenrolling students
+                        //covers enrolling and unenrolling students
                         RosterManagementMenu(course, proxy);
                         Console.ReadKey();
                         break;
                     case "4":
-                        // Will map to Issues #13 & #17
+                        //will map to Issues #13 & #17
                         RunAssignmentsMenu(course, proxy);
                         Console.ReadKey();
                         break;
                     case "5":
-                        // Will map to Issues #18, #19, #20, #21
+                        //runs module management menu in a course
                         RunModulesMenu(course, proxy);
                         break;
                     case "6":
-                        // Will map to Issue #15
-                        Console.WriteLine("\nPlaceholder: Grade Submissions");
+                        //manages grade submissions window for assignments in a course
+                        GradeSubmissionsForm(course);
                         Console.ReadKey();
                         break;
                     case "7":
@@ -255,7 +255,7 @@ namespace CLI.CMS.Handlers
             Console.ReadKey();
         }
 
-    // Add a new module to a specific course by ID
+    //add a new module to a specific course by ID
         static void AddModuleForm(Course course, SiteServiceProxy proxy)
         {
             Console.Clear();
@@ -759,9 +759,10 @@ namespace CLI.CMS.Handlers
                 Console.WriteLine("--------------------------------------");
                 Console.WriteLine("1. Add a New Assignment");
                 Console.WriteLine("2. Edit an Existing Assignment");
-                Console.WriteLine("3. Return to Course Menu");
+                Console.WriteLine("3. Delete an Assignment");
+                Console.WriteLine("4. Return to Course Menu");
                 Console.WriteLine("======================================");
-                Console.Write("Enter choice (1-3): ");
+                Console.Write("Enter choice (1-4): ");
 
                 string choice = (Console.ReadLine() ?? string.Empty).Trim();
 
@@ -775,6 +776,10 @@ namespace CLI.CMS.Handlers
                         Console.ReadKey();
                         break;
                     case "3":
+                        DeleteAssignmentForm(course, proxy);
+                        Console.ReadKey();
+                        break;
+                    case "4":
                         inAssignmentsMenu = false;
                         break;
                     default:
@@ -909,6 +914,130 @@ namespace CLI.CMS.Handlers
             }
                 Console.WriteLine("\nPress any key to return...");
                 Console.ReadKey();
+        }
+
+        private static void DeleteAssignmentForm(Course course, SiteServiceProxy proxy)
+        {
+            Console.Clear();
+            Console.WriteLine($"--- Delete Assignment ({course.Code}) ---");
+
+            if (course.Assignments.Count == 0)
+            {
+                Console.WriteLine("No assignments exist in this course to delete.");
+                Console.WriteLine("\nPress any key to return...");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.Write("Enter the ID of the assignment you want to delete: ");
+            if (int.TryParse(Console.ReadLine(), out int targetId))
+            {
+                var assignment = course.Assignments.FirstOrDefault(a => a.Id == targetId);
+
+                if (assignment != null)
+                {
+                    Console.Clear();
+                    Console.WriteLine($"WARNING: You are about to permanently delete assignment: '{assignment.Name}'");
+                    Console.Write("Type 'YES' to confirm deletion: ");
+                    string confirmation = (Console.ReadLine() ?? string.Empty).Trim().ToUpper();
+
+                    if (confirmation == "YES")
+                    {
+                        proxy.RemoveAssignmentFromCourse(course.Id, targetId);
+                        Console.WriteLine("\nSuccess! The assignment has been permanently deleted.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("\nDeletion cancelled.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"\nError: Assignment with ID {targetId} not found.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("\nInvalid ID selection format.");
+            }
+
+            Console.WriteLine("\nPress any key to return...");
+            Console.ReadKey();
+        }
+
+        //methodfor grading student submissions in courses
+        private static void GradeSubmissionsForm(Course course)
+        {
+            Console.Clear();
+            Console.WriteLine($"--- Grade Submissions ({course.Code}) ---");
+
+            var gradedAssignments = course.Assignments.Where(a => a.Submissions.Count > 0).ToList();
+
+            if (gradedAssignments.Count == 0)
+            {
+                Console.WriteLine("No submissions exist in any assignments for this course.");
+                Console.WriteLine("\nPress any key to return...");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.WriteLine("Assignments with submissions:");
+            foreach (var assign in gradedAssignments)
+            {
+                int ungradedCount = assign.Submissions.Count(s => !s.IsGraded);
+                Console.WriteLine($"  [ID: {assign.Id}] {assign.Name} ({ungradedCount} ungraded submissions)");
+            }
+            Console.WriteLine("--------------------------------------");
+            Console.Write("Enter the ID of the assignment to grade: ");
+
+            if (int.TryParse(Console.ReadLine(), out int assignId))
+            {
+                var assignment = course.Assignments.FirstOrDefault(a => a.Id == assignId);
+                if (assignment != null && assignment.Submissions.Count > 0)
+                {
+                    Console.Clear();
+                    Console.WriteLine($"--- Submissions for: {assignment.Name} ---");
+                    
+                    foreach (var sub in assignment.Submissions)
+                    {
+                        string gradeText = sub.IsGraded ? $"{sub.Grade}/{assignment.TotalPoints}" : "UNGRADED";
+                        Console.WriteLine($"[Submission ID: {sub.Id}] Student: {sub.StudentName} (ID: {sub.StudentId})");
+                        Console.WriteLine($"  Submission Content: \"{sub.Content}\"");
+                        Console.WriteLine($"  Current Grade: {gradeText}");
+                        Console.WriteLine("--------------------------------------");
+                    }
+
+                    Console.Write("Enter the Submission ID to grade: ");
+                    if (int.TryParse(Console.ReadLine(), out int subId))
+                    {
+                        var targetSub = assignment.Submissions.FirstOrDefault(s => s.Id == subId);
+                        if (targetSub != null)
+                        {
+                            Console.Write($"Enter grade for {targetSub.StudentName} (Max {assignment.TotalPoints}): ");
+                            if (double.TryParse(Console.ReadLine(), out double grade) && grade >= 0 && grade <= assignment.TotalPoints)
+                            {
+                                targetSub.Grade = grade;
+                                Console.WriteLine($"\nSuccess! Assigned grade {grade}/{assignment.TotalPoints} to {targetSub.StudentName}.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("\nInvalid grade format or point values out of bounds.");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nSubmission ID not found.");
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("\nAssignment ID not found or has no active submissions.");
+                }
+            }
+
+            Console.WriteLine("\nPress any key to return...");
+            Console.ReadKey();
         }
 
 
