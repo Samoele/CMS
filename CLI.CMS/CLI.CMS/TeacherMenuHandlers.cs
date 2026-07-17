@@ -261,21 +261,36 @@ namespace CLI.CMS.Handlers
             Console.Clear();
             Console.WriteLine($"--- Add Module to {course.Code} ---");
             
-            var newModule = new Module();
-            
-            // In our specification, Module only has an Id and a List<string> Content.
-            // Let's allow them to add an initial content string to start off.
-            Console.Write("Enter initial module content or description: ");
+            // 1. Let's collect a Name for the module now that the model supports it!
+            Console.Write("Enter Module Name: ");
+            string moduleName = Console.ReadLine() ?? "Untitled Module";
+            if (string.IsNullOrWhiteSpace(moduleName)) moduleName = "Untitled Module";
+
+            // 2. Use the initial input as a Description property on the Module itself
+            Console.Write("Enter module description: ");
             string initialContent = Console.ReadLine() ?? string.Empty;
 
+            var newModule = new Module
+            {
+                Name = moduleName,
+                Description = initialContent
+            };
+
+            // 3. OPTIONAL: If you want that text to also become a Page inside the content list:
             if (!string.IsNullOrWhiteSpace(initialContent))
             {
-                newModule.Content.Add(initialContent);
+                newModule.Content.Add(new PageItem
+                {
+                    Id = 1,
+                    Name = "Module Overview",
+                    Body = initialContent
+                });
             }
 
+            // Call your proxy to add the module to the course
             proxy.AddModuleToCourse(course.Id, newModule);
 
-            Console.WriteLine($"\nSuccess! Module created with ID: {newModule.Id} and added to {course.Code}.");
+            Console.WriteLine($"\nSuccess! Module '{moduleName}' added.");
             Console.WriteLine("\nPress any key to return...");
             Console.ReadKey();
         }
@@ -305,7 +320,7 @@ namespace CLI.CMS.Handlers
                         Console.WriteLine($"[Module ID: {mod.Id}]");
                         foreach (var contentItem in mod.Content)
                         {
-                            Console.WriteLine($"  - {contentItem}");
+                            Console.WriteLine($"   - [{contentItem.GetType().Name.Replace("Item", "").ToUpper()}] {contentItem.Name}");
                         }
                     }
                 }
@@ -327,8 +342,37 @@ namespace CLI.CMS.Handlers
                         AddModuleForm(course, proxy);
                         break;
                     case "2":
-                        // Adds text vcontent to a module inside a course
-                        AddContentToModuleForm(course, proxy);
+                        //check if modules exist first
+                        if (course.Modules.Count == 0)
+                        {
+                            Console.WriteLine("\nNo modules exist yet to add content to! Create a module first.");
+                            Console.ReadKey();
+                            break;
+                        }
+
+                        //ask user which module they want to manage
+                        Console.Write("Enter the Module ID you want to add content to: ");
+                        if (int.TryParse(Console.ReadLine(), out int targetModuleId))
+                        {
+                            //get Module instance
+                            var selectedModule = course.Modules.FirstOrDefault(m => m.Id == targetModuleId);
+
+                            if (selectedModule != null)
+                            {
+                                //pass specific content to module
+                                AddContentToModuleForm(course, selectedModule);
+                            }
+                            else
+                            {
+                                Console.WriteLine($"\nModule with ID {targetModuleId} not found.");
+                                Console.ReadKey();
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nInvalid ID selection format.");
+                            Console.ReadKey();
+                        }
                         break;
                     case "3":
                         // Modify content in a module
@@ -349,135 +393,312 @@ namespace CLI.CMS.Handlers
             }
         }
 
-        static void AddContentToModuleForm(Course course, SiteServiceProxy proxy)
+        private static void AddContentToModuleForm(Course course, Module module)
         {
-            Console.Clear();
-            Console.WriteLine($"--- Add Content to a Module ({course.Code}) ---");
+            bool addingContent = true;
 
-            if (course.Modules.Count == 0)
+            while (addingContent)
             {
-                Console.WriteLine("No modules exist in this course yet. Create a module first.");
-                Console.WriteLine("\nPress any key to return...");
-                Console.ReadKey();
-                return;
-            }
+                Console.Clear();
+                Console.WriteLine("======================================");
+                Console.WriteLine($"  Add Content to Module: {module.Name}");
+                Console.WriteLine("======================================");
+                Console.WriteLine("1. Add a Page (Text Block)");
+                Console.WriteLine("2. Add a File (Link/Path)");
+                Console.WriteLine("3. Embed an Existing Assignment");
+                Console.WriteLine("4. Finish / Return to Module Menu");
+                Console.WriteLine("======================================");
+                Console.Write("Enter choice (1-4): ");
 
-            // List available modules so the teacher can pick one
-            Console.WriteLine("Available Modules:");
-            foreach (var mod in course.Modules)
-            {
-                Console.WriteLine($"[Module ID: {mod.Id}] (Contains {mod.Content.Count} items)");
-            }
-            Console.WriteLine("--------------------------------------");
+                string choice = (Console.ReadLine() ?? string.Empty).Trim();
 
-            Console.Write("Enter the ID of the module to add content to: ");
-            if (int.TryParse(Console.ReadLine(), out int targetModuleId))
-            {
-                var targetModule = proxy.GetModuleFromCourse(course.Id, targetModuleId);
+                //calculate next ID for the local module content items
+                int nextItemId = module.Content.Count > 0 ? module.Content.Max(i => i.Id) + 1 : 1;
 
-                if (targetModule != null)
+                switch (choice)
                 {
-                    Console.Write("Enter the content text to add: ");
-                    string contentText = Console.ReadLine() ?? string.Empty;
+                    case "1": // Create a Page
+                        Console.Clear();
+                        Console.WriteLine("--- Create Module Page ---");
+                        Console.Write("Enter Page Title: ");
+                        string pageTitle = Console.ReadLine() ?? "Untitled Page";
+                        Console.Write("Enter Page Content Body:\n");
+                        string pageBody = Console.ReadLine() ?? string.Empty;
 
-                    if (!string.IsNullOrWhiteSpace(contentText))
-                    {
-                        targetModule.Content.Add(contentText);
-                        Console.WriteLine("\nSuccess! Content item added to the module.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("\nCancelled. Content cannot be blank.");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"\nError: Module with ID {targetModuleId} not found.");
+                        var newPage = new PageItem 
+                        { 
+                            Id = nextItemId, 
+                            Name = pageTitle, 
+                            Body = pageBody 
+                        };
+                        module.Content.Add(newPage);
+                        Console.WriteLine("\nSuccess! Page item appended to module.");
+                        Console.ReadKey();
+                        break;
+
+                    case "2": // Create a File
+                        Console.Clear();
+                        Console.WriteLine("--- Link Module File ---");
+                        Console.Write("Enter Display Name for File: ");
+                        string fileName = Console.ReadLine() ?? "Untitled File";
+                        Console.Write("Enter File Path (e.g., syllabus.pdf): ");
+                        string filePath = Console.ReadLine() ?? string.Empty;
+
+                        var newFile = new FileItem 
+                        { 
+                            Id = nextItemId, 
+                            Name = fileName, 
+                            FilePath = filePath 
+                        };
+                        module.Content.Add(newFile);
+                        Console.WriteLine("\nSuccess! File reference appended to module.");
+                        Console.ReadKey();
+                        break;
+
+                    case "3": // Link an Assignment
+                        Console.Clear();
+                        Console.WriteLine("--- Link Course Assignment ---");
+                        if (course.Assignments.Count == 0)
+                        {
+                            Console.WriteLine("No assignments exist in this course yet. Create one first!");
+                            Console.ReadKey();
+                            break;
+                        }
+
+                        Console.WriteLine("Available Course Assignments:");
+                        foreach (var assign in course.Assignments)
+                        {
+                            Console.WriteLine($"  [ID: {assign.Id}] {assign.Name}");
+                        }
+                        Console.WriteLine("--------------------------------------");
+                        Console.Write("Enter the Assignment ID to link: ");
+                        
+                        if (int.TryParse(Console.ReadLine(), out int assignId))
+                        {
+                            var targetAssign = course.Assignments.FirstOrDefault(a => a.Id == assignId);
+                            if (targetAssign != null)
+                            {
+                                var newAssignItem = new AssignmentItem(targetAssign)
+                                {
+                                    Id = nextItemId
+                                };
+                                module.Content.Add(newAssignItem);
+                                Console.WriteLine($"\nSuccess! Embedded assignment '{targetAssign.Name}' into module.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("\nAssignment ID not found.");
+                            }
+                        }
+                        Console.ReadKey();
+                        break;
+
+                    case "4":
+                        addingContent = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("\nInvalid choice. Press any key to try again...");
+                        Console.ReadKey();
+                        break;
                 }
             }
-            else
-            {
-                Console.WriteLine("\nInvalid ID entry.");
-            }
-
-            Console.WriteLine("\nPress any key to return...");
-            Console.ReadKey();
         }
 
 
         //Form for modifying content in a module
-        static void ModifyContentInModuleForm(Course course, SiteServiceProxy proxy)
+        private static void ModifyContentInModuleForm(Course course, SiteServiceProxy proxy)
         {
             Console.Clear();
             Console.WriteLine($"--- Modify Module Content ({course.Code}) ---");
 
             if (course.Modules.Count == 0)
             {
-                Console.WriteLine("No modules exist in this course yet.");
-                Console.WriteLine("\nPress any key to return...");
+                Console.WriteLine("No modules exist in this course.");
                 Console.ReadKey();
                 return;
             }
 
-            // List available modules
-            Console.WriteLine("Available Modules:");
-            foreach (var mod in course.Modules)
+            //select module by ID
+            Console.Write("Enter the Module ID to modify content within: ");
+            if (!int.TryParse(Console.ReadLine(), out int moduleId))
             {
-                Console.WriteLine($"[Module ID: {mod.Id}] (Contains {mod.Content.Count} items)");
+                Console.WriteLine("Invalid ID format.");
+                Console.ReadKey();
+                return;
+            }
+
+            var module = course.Modules.FirstOrDefault(m => m.Id == moduleId);
+            if (module == null)
+            {
+                Console.WriteLine("Module not found.");
+                Console.ReadKey();
+                return;
+            }
+
+            if (module.Content.Count == 0)
+            {
+                Console.WriteLine("\nThis module has no content items to modify.");
+                Console.ReadKey();
+                return;
+            }
+
+            //show items inside the module
+            Console.WriteLine("\nCurrent Content Items:");
+            foreach (var item in module.Content)
+            {
+                string typeLabel = item switch
+                {
+                    PageItem => "[PAGE]",
+                    FileItem => "[FILE]",
+                    AssignmentItem => "[ASSIGNMENT]",
+                    _ => "[ITEM]"
+                };
+                Console.WriteLine($"  [Item ID: {item.Id}] {typeLabel} {item.Name}");
             }
             Console.WriteLine("--------------------------------------");
 
-            Console.Write("Enter the ID of the module to modify: ");
-            if (int.TryParse(Console.ReadLine(), out int targetModuleId))
+            //select item to modify
+            Console.Write("Enter the Item ID to edit: ");
+            if (!int.TryParse(Console.ReadLine(), out int itemId))
             {
-                var targetModule = proxy.GetModuleFromCourse(course.Id, targetModuleId);
+                Console.WriteLine("Invalid ID format.");
+                Console.ReadKey();
+                return;
+            }
 
-                if (targetModule != null)
+            var targetItem = module.Content.FirstOrDefault(i => i.Id == itemId);
+            if (targetItem == null)
+            {
+                Console.WriteLine("Content item not found.");
+                Console.ReadKey();
+                return;
+            }
+
+            //modify item based on type of item
+            Console.Clear();
+            Console.WriteLine($"--- Editing Item: {targetItem.Name} ---");
+            
+            Console.WriteLine($"Current Name: {targetItem.Name}");
+            Console.Write("Enter new name (leave blank to keep current): ");
+            string newName = Console.ReadLine() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(newName))
+            {
+                targetItem.Name = newName;
+                //if embedded assignment item, then also updates the linked assignment reference
+                if (targetItem is AssignmentItem assignItem && assignItem.LinkedAssignment != null)
                 {
-                    if (targetModule.Content.Count == 0)
-                    {
-                        Console.WriteLine("\nThis module has no content items to modify.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("\nContent Items:");
-                        for (int i = 0; i < targetModule.Content.Count; i++)
-                        {
-                            Console.WriteLine($"[{i}] {targetModule.Content[i]}");
-                        }
-                        Console.WriteLine("--------------------------------------");
+                    assignItem.LinkedAssignment.Name = newName;
+                }
+            }
 
-                        Console.Write("Enter the index number of the item to modify: ");
-                        if (int.TryParse(Console.ReadLine(), out int targetIndex) && targetIndex >= 0 && targetIndex < targetModule.Content.Count)
-                        {
-                            Console.WriteLine($"\nCurrent text: \"{targetModule.Content[targetIndex]}\"");
-                            Console.Write("Enter the new text: ");
-                            string updatedText = Console.ReadLine() ?? string.Empty;
+            //change of item if it is a page
+            if (targetItem is PageItem page)
+            {
+                Console.WriteLine($"\nCurrent Body Text: {page.Body}");
+                Console.Write("Enter new body text (leave blank to keep current):\n");
+                string newBody = Console.ReadLine() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(newBody))
+                {
+                    page.Body = newBody;
+                }
+            }//change if item is a file
+            else if (targetItem is FileItem file)
+            {
+                Console.WriteLine($"\nCurrent File Path: {file.FilePath}");
+                Console.Write("Enter new file path (leave blank to keep current): ");
+                string newPath = Console.ReadLine() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(newPath))
+                {
+                    file.FilePath = newPath;
+                }
+            }//changge if the file is an assignment
+            else if (targetItem is AssignmentItem assignmentItem)
+            {
+                Console.WriteLine("\nNote: This is an embedded link to a course assignment.");
+                Console.WriteLine("To edit the assignment, use the main Assignment Management menu.");
+            }
 
-                            if (!string.IsNullOrWhiteSpace(updatedText))
-                            {
-                                targetModule.Content[targetIndex] = updatedText;
-                                Console.WriteLine("\nSuccess! Content item updated.");
-                            }
-                            else
-                            {
-                                Console.WriteLine("\nCancelled. Content cannot be blank.");
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("\nInvalid index selection.");
-                        }
-                    }
+            Console.WriteLine("\nSuccess! Content item updated.");
+            Console.WriteLine("\nPress any key to return...");
+            Console.ReadKey();
+        }
+
+
+        //Method for deleting a module in module menu
+
+        //New method to account for specific types
+        private static void RemoveContentFromModuleForm(Course course, SiteServiceProxy proxy)
+        {
+            Console.Clear();
+            Console.WriteLine($"--- Remove Module Content ({course.Code}) ---");
+
+            if (course.Modules.Count == 0)
+            {
+                Console.WriteLine("No modules exist in this course.");
+                Console.ReadKey();
+                return;
+            }
+
+            //select module by ID
+            Console.Write("Enter the Module ID to remove content from: ");
+            if (!int.TryParse(Console.ReadLine(), out int moduleId))
+            {
+                Console.WriteLine("Invalid ID format.");
+                Console.ReadKey();
+                return;
+            }
+
+            var module = course.Modules.FirstOrDefault(m => m.Id == moduleId);
+            if (module == null)
+            {
+                Console.WriteLine("Module not found.");
+                Console.ReadKey();
+                return;
+            }
+
+            if (module.Content.Count == 0)
+            {
+                Console.WriteLine("\nThis module has no content items to remove.");
+                Console.ReadKey();
+                return;
+            }
+
+            //display available items to delete
+            Console.WriteLine("\nCurrent Content Items:");
+            foreach (var item in module.Content)
+            {
+                string typeLabel = item switch
+                {
+                    PageItem => "[PAGE]",
+                    FileItem => "[FILE]",
+                    AssignmentItem => "[ASSIGNMENT]",
+                    _ => "[ITEM]"
+                };
+                Console.WriteLine($"  [Item ID: {item.Id}] {typeLabel} {item.Name}");
+            }
+            Console.WriteLine("--------------------------------------");
+
+            //select item by ID to delete
+            Console.Write("Enter the Item ID to REMOVE: ");
+            if (int.TryParse(Console.ReadLine(), out int itemId))
+            {
+                var targetItem = module.Content.FirstOrDefault(i => i.Id == itemId);
+
+                if (targetItem != null)
+                {
+                    //remove the actual object reference from the collection
+                    module.Content.Remove(targetItem);
+                    Console.WriteLine($"\nSuccess! Removed item '{targetItem.Name}' from module.");
                 }
                 else
                 {
-                    Console.WriteLine($"\nError: Module with ID {targetModuleId} not found.");
+                    Console.WriteLine("\nItem ID not found within this module.");
                 }
             }
             else
             {
-                Console.WriteLine("\nInvalid ID entry.");
+                Console.WriteLine("\nInvalid ID selection format.");
             }
 
             Console.WriteLine("\nPress any key to return...");
@@ -485,72 +706,52 @@ namespace CLI.CMS.Handlers
         }
 
 
-        //Method for deleting a module in module menu
-        static void RemoveContentFromModuleForm(Course course, SiteServiceProxy proxy)
+
+
+
+        //View modules new format 
+        private static void ViewCourseModules(Course course)
         {
             Console.Clear();
-            Console.WriteLine($"--- Remove Module Content ({course.Code}) ---");
+            Console.WriteLine($"======================================");
+            Console.WriteLine($"        {course.Code} Course Modules   ");
+            Console.WriteLine($"======================================");
 
             if (course.Modules.Count == 0)
             {
-                Console.WriteLine("No modules exist in this course yet.");
-                Console.WriteLine("\nPress any key to return...");
-                Console.ReadKey();
-                return;
-            }
-
-            // List available modules
-            Console.WriteLine("Available Modules:");
-            foreach (var mod in course.Modules)
-            {
-                Console.WriteLine($"[Module ID: {mod.Id}] (Contains {mod.Content.Count} items)");
-            }
-            Console.WriteLine("--------------------------------------");
-
-            Console.Write("Enter the ID of the module to remove content from: ");
-            if (int.TryParse(Console.ReadLine(), out int targetModuleId))
-            {
-                var targetModule = proxy.GetModuleFromCourse(course.Id, targetModuleId);
-
-                if (targetModule != null)
-                {
-                    if (targetModule.Content.Count == 0)
-                    {
-                        Console.WriteLine("\nThis module has no content items to remove.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("\nContent Items:");
-                        for (int i = 0; i < targetModule.Content.Count; i++)
-                        {
-                            Console.WriteLine($"[{i}] {targetModule.Content[i]}");
-                        }
-                        Console.WriteLine("--------------------------------------");
-
-                        Console.Write("Enter the index number of the item to remove: ");
-                        if (int.TryParse(Console.ReadLine(), out int targetIndex) && targetIndex >= 0 && targetIndex < targetModule.Content.Count)
-                        {
-                            string removedText = targetModule.Content[targetIndex];
-                            targetModule.Content.RemoveAt(targetIndex);
-                            
-                            Console.WriteLine($"\nSuccess! Permanently removed: \"{removedText}\"");
-                        }
-                        else
-                        {
-                            Console.WriteLine("\nInvalid index selection.");
-                        }
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"\nError: Module with ID {targetModuleId} not found.");
-                }
+                Console.WriteLine("No modules exist for this course yet.");
             }
             else
             {
-                Console.WriteLine("\nInvalid ID entry.");
-            }
+                foreach (var mod in course.Modules)
+                {
+                    Console.WriteLine($"\n[Module ID: {mod.Id}] {mod.Name}");
+                    Console.WriteLine($"Description: {mod.Description}");
+                    Console.WriteLine("  Content Items:");
+                    
+                    if (mod.Content.Count == 0)
+                    {
+                        Console.WriteLine("    (No content items inside this module)");
+                    }
+                    else
+                    {
+                        foreach (var item in mod.Content)
+                        {
+                            // Use pattern matching to visually label item types clearly
+                            string typeLabel = item switch
+                            {
+                                PageItem => "[PAGE]",
+                                FileItem => "[FILE]",
+                                AssignmentItem => "[ASSIGNMENT]",
+                                _ => "[ITEM]"
+                            };
 
+                            Console.WriteLine($"    - {typeLabel} {item.Name}");
+                        }
+                    }
+                    Console.WriteLine(new string('-', 38));
+                }
+            }
             Console.WriteLine("\nPress any key to return...");
             Console.ReadKey();
         }
@@ -965,7 +1166,7 @@ namespace CLI.CMS.Handlers
             Console.ReadKey();
         }
 
-        //methodfor grading student submissions in courses
+        //method for grading student submissions in courses
         private static void GradeSubmissionsForm(Course course)
         {
             Console.Clear();
