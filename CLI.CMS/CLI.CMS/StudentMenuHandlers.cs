@@ -175,23 +175,47 @@ namespace ConsoleApp1.Handlers
             }
         }
 
+        //new format for viewing course modules
         private static void ViewCourseModules(Course course)
         {
             Console.Clear();
-            Console.WriteLine($"--- {course.Code} Modules ---");
+            Console.WriteLine($"======================================");
+            Console.WriteLine($"        {course.Code} Course Modules   ");
+            Console.WriteLine($"======================================");
+
             if (course.Modules.Count == 0)
             {
-                Console.WriteLine("No modules published for this course yet.");
+                Console.WriteLine("No modules exist for this course yet.");
             }
             else
             {
                 foreach (var mod in course.Modules)
                 {
-                    Console.WriteLine($"\n[Module ID: {mod.Id}]");
-                    foreach (var item in mod.Content)
+                    Console.WriteLine($"\n[Module ID: {mod.Id}] {mod.Name}");
+                    Console.WriteLine($"Description: {mod.Description}");
+                    Console.WriteLine("  Content Items:");
+                    
+                    if (mod.Content.Count == 0)
                     {
-                        Console.WriteLine($"  - {item}");
+                        Console.WriteLine("    (No content items inside this module)");
                     }
+                    else
+                    {
+                        foreach (var item in mod.Content)
+                        {
+                            // Use pattern matching to visually label item types clearly
+                            string typeLabel = item switch
+                            {
+                                PageItem => "[PAGE]",
+                                FileItem => "[FILE]",
+                                AssignmentItem => "[ASSIGNMENT]",
+                                _ => "[ITEM]"
+                            };
+
+                            Console.WriteLine($"    - {typeLabel} {item.Name}");
+                        }
+                    }
+                    Console.WriteLine(new string('-', 38));
                 }
             }
             Console.WriteLine("\nPress any key to return...");
