@@ -18,5 +18,9 @@ namespace Library.CMS.Models
             Console.WriteLine("\nPress any key to close page...");
             Console.ReadKey();
         }
+
+        public override ContentItem Clone() => new PageItem { Id = this.Id, Name = this.Name, Body = this.Body };
+
+
     }
 }

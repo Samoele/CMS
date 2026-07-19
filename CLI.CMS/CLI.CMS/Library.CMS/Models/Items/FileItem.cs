@@ -18,5 +18,8 @@ namespace Library.CMS.Models
             Console.WriteLine("\nPress any key to close file...");
             Console.ReadKey();
         }
+
+        //cloning of File Item
+        public override ContentItem Clone() => new FileItem { Id = this.Id, Name = this.Name, FilePath = this.FilePath };
     }
 }
