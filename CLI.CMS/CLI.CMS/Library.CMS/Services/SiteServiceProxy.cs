@@ -43,7 +43,8 @@ namespace Library.CMS.Services
                 Code = "COP4870",
                 Name = "C# Programming",
                 Description = "Learn how to build enterprise applications using C# and .NET!",
-                Semester = "Summer 2026"
+                Semester = "Summer 2026",
+                Section = "001"
             };
 
             // 3. Enroll Alice and Bob into the default course roster automatically
