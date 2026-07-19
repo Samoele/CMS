@@ -22,7 +22,8 @@ namespace CLI.CMS.Handlers
                 Console.WriteLine("1. Add a New Course");
                 Console.WriteLine("2. Copy a Course");
                 Console.WriteLine("3. Select an Existing Course");
-                Console.WriteLine("4. Return to Main Menu");
+                Console.WriteLine("4. See Courses by Semester");
+                Console.WriteLine("5. Return to Main Menu");
                 Console.WriteLine("======================================");
                 Console.Write("Enter choice (1-4): ");
 
@@ -41,7 +42,11 @@ namespace CLI.CMS.Handlers
                         // Logic to select an existing course
                         SelectExistingCourseForm(proxy);
                         break;
-                    case "4": //exit the menu
+                    case "4":
+                    //Logic to filter courses by semester
+                        FilterCoursesForm(proxy);
+                        break;
+                    case "5": //exit the menu
                         inTeacherMenu = false;
                         break;
                         
@@ -64,13 +69,28 @@ namespace CLI.CMS.Handlers
         Console.Write("Enter Course Description: ");
         string? description = Console.ReadLine();
 
+        //Require input for a semester
+        string semester = string.Empty;
+            while (string.IsNullOrWhiteSpace(semester))
+            {
+                Console.Write("Enter Semester/Term (e.g Fall 2026): ");
+                semester = (Console.ReadLine() ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(semester))
+                {
+                    Console.WriteLine("Error. Semester is required to register a course. Please try again.");
+
+                }
+            }
+        
+            //checks that code, name and description are not blank
         if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(description))
         {
             var newCourse = new Course
             {
                 Code = code,
                 Name = name,
-                Description = description
+                Description = description,
+                Semester = semester
             };
 
             proxy.AddCourse(newCourse);
@@ -1465,7 +1485,7 @@ namespace CLI.CMS.Handlers
                     if (!string.IsNullOrWhiteSpace(newCode) && !string.IsNullOrWhiteSpace(newName))
                     {
                         proxy.CloneCourse(targetId, newCode, newName);
-                        Console.WriteLine($"\nSuccess! Deep copy of '{targetCourse.Code}' created as '{newCode}'.");
+                        Console.WriteLine($"\nSuccess! Deep Copy of '{targetCourse.Code}' created as '{newCode}'.");
                     }
                     else
                     {
@@ -1478,6 +1498,99 @@ namespace CLI.CMS.Handlers
 
             Console.ReadKey();
         }
+
+
+        //SORTING OF COURSES IN TEACHER VIEW
+        public static void FilterCoursesForm(SiteServiceProxy proxy)
+        {
+            bool viewing = true;
+            string? currentFilter = null; //null means "Show All Semesters"
+
+            while (viewing)
+            {
+                Console.Clear();
+                Console.WriteLine("======================================");
+                Console.WriteLine("          Instructor Course Directory ");
+                string filterLabel = currentFilter == null ? "All Terms" : $"Filtered by: {currentFilter}";
+                Console.WriteLine($"          Current View: {filterLabel}");
+                Console.WriteLine("======================================");
+
+                var allCourses = proxy.GetCourses();
+
+                if (allCourses.Count == 0)
+                {
+                    Console.WriteLine("No courses exist in the system database yet.");
+                    Console.WriteLine("\nPress any key to return...");
+                    Console.ReadKey();
+                    return;
+                }
+
+                //apply dinamic filtering
+                var filteredCourses = currentFilter == null 
+                    ? allCourses 
+                    : allCourses.Where(c => c.Semester.Equals(currentFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                if (filteredCourses.Count == 0)
+                {
+                    Console.WriteLine($"No courses found registered under term '{currentFilter}'.");
+                }
+                else
+                {
+                    //orrganize and sort them dynamically by semester using LINQ GroupBy
+                    var groupedBySemester = filteredCourses
+                        .GroupBy(c => c.Semester)
+                        .OrderBy(g => g.Key); //sort them alphabetically
+
+                    foreach (var semesterGroup in groupedBySemester)
+                    {
+                        Console.WriteLine($"\n🗓️  SEMESTER: {semesterGroup.Key.ToUpper()}");
+                        Console.WriteLine(new string('-', 45));
+                        
+                        foreach (var course in semesterGroup.OrderBy(c => c.Code))
+                        {
+                            Console.WriteLine($"  [ID: {course.Id,-3}] {course.Code,-8} | {course.Name}");
+                        }
+                    }
+                }
+
+                Console.WriteLine("\n" + new string('=', 38));
+                Console.WriteLine("1. Filter by a Specific Semester/Term");
+                Console.WriteLine("2. Clear Filter (Show All Semesters)");
+                Console.WriteLine("3. Return to Main Dashboard");
+                Console.WriteLine("======================================");
+                Console.Write("Enter choice (1-3): ");
+
+                string choice = (Console.ReadLine() ?? string.Empty).Trim();
+
+                switch (choice)
+                {
+                    case "1":
+                        //show available terms to help user choose
+                        var availableTerms = allCourses.Select(c => c.Semester).Distinct().ToList();
+                        Console.Clear();
+                        Console.WriteLine("Available Active Terms:");
+                        foreach (var term in availableTerms) Console.WriteLine($"  - {term}");
+                        Console.WriteLine("--------------------------------------");
+                        Console.Write("Enter term name exactly to filter: ");
+                        string targetFilter = (Console.ReadLine() ?? string.Empty).Trim();
+                        if (!string.IsNullOrWhiteSpace(targetFilter))
+                        {
+                            currentFilter = targetFilter;
+                        }
+                        break;
+
+                    case "2":
+                        currentFilter = null; //clear out the filter state
+                        Console.WriteLine("\nFilters cleared successfully.");
+                        break;
+
+                    case "3":
+                        viewing = false;
+                        break;
+                }
+            }
+        }
+
 
 
 

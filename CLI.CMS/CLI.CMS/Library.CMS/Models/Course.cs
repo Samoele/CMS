@@ -8,6 +8,9 @@ namespace Library.CMS.Models
         public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+
+        //Semester property for course creation
+        public string Semester { get; set; } = string.Empty;
         
         // Relationships
         public List<Student> Roster { get; set; } = new List<Student>();
