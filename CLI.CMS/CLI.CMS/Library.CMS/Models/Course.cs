@@ -9,6 +9,8 @@ namespace Library.CMS.Models
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
 
+        public string Section { get; set; } = string.Empty; //different sections
+
         //Semester property for course creation
         public string Semester { get; set; } = string.Empty;
         

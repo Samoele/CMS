@@ -68,6 +68,8 @@ namespace CLI.CMS.Handlers
         string? name = Console.ReadLine();
         Console.Write("Enter Course Description: ");
         string? description = Console.ReadLine();
+        Console.Write("Enter Course Section (e.g., 001): ");
+    string section = (Console.ReadLine() ?? string.Empty).Trim();
 
         //Require input for a semester
         string semester = string.Empty;
@@ -83,14 +85,15 @@ namespace CLI.CMS.Handlers
             }
         
             //checks that code, name and description are not blank
-        if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(description))
+        if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(section))
         {
             var newCourse = new Course
             {
-                Code = code,
+                Code = code, 
                 Name = name,
                 Description = description,
-                Semester = semester
+                Semester = semester,
+                Section = section
             };
 
             proxy.AddCourse(newCourse);
@@ -1481,6 +1484,7 @@ namespace CLI.CMS.Handlers
                     
                     Console.Write("Enter NEW Course Name: ");
                     string newName = Console.ReadLine() ?? string.Empty;
+                    
 
                     if (!string.IsNullOrWhiteSpace(newCode) && !string.IsNullOrWhiteSpace(newName))
                     {
@@ -1548,7 +1552,7 @@ namespace CLI.CMS.Handlers
                         
                         foreach (var course in semesterGroup.OrderBy(c => c.Code))
                         {
-                            Console.WriteLine($"  [ID: {course.Id,-3}] {course.Code,-8} | {course.Name}");
+                            Console.WriteLine($"  [ID: {course.Id,-3}] {course.Code,-8} {course.Section,-4} | {course.Name}");
                         }
                     }
                 }
