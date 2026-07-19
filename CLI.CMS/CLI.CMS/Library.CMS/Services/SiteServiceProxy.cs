@@ -42,7 +42,8 @@ namespace Library.CMS.Services
                 Id = 1,
                 Code = "COP4870",
                 Name = "C# Programming",
-                Description = "Learn how to build enterprise applications using C# and .NET!"
+                Description = "Learn how to build enterprise applications using C# and .NET!",
+                Semester = "Summer 2026"
             };
 
             // 3. Enroll Alice and Bob into the default course roster automatically
@@ -90,7 +91,7 @@ namespace Library.CMS.Services
             return Courses.FirstOrDefault(c => c.Id == id);
         }
 
-        //Retrieves all courses
+        //Retrieves all courses for 
         public List<Course> GetCourses()
         {
             return Courses;
@@ -238,7 +239,8 @@ namespace Library.CMS.Services
                 Id = Courses.Count > 0 ? Courses.Max(c => c.Id) + 1 : 1,
                 Code = newCode,
                 Name = newName,
-                Roster = new List<Student>(), // Enforce clean slate for roster
+                Semester = original.Semester,
+                Roster = new List<Student>(), //enforce clean slate for roster
                 Assignments = new List<Assignment>(),
                 Modules = new List<Module>(),
                 AssignmentGroup = new List<AssignmentGroup>()
