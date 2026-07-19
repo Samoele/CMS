@@ -147,9 +147,10 @@ namespace CLI.CMS.Handlers
                 Console.WriteLine("4. Manage Assignments (Add/Edit)");
                 Console.WriteLine("5. Manage Modules (Add/Edit Content)");
                 Console.WriteLine("6. Grade Submissions");
-                Console.WriteLine("7. Return to Teacher Menu");
+                Console.WriteLine("7. Create Assignment Group");
+                Console.WriteLine("8. Return to Main Teacher Menu");
                 Console.WriteLine("======================================");
-                Console.Write("Enter choice (1-7): ");
+                Console.Write("Enter choice (1-8): ");
 
                 string? choice = Console.ReadLine();
 
@@ -185,6 +186,9 @@ namespace CLI.CMS.Handlers
                         Console.ReadKey();
                         break;
                     case "7":
+                        RunAssignmentGroupsMenu(course, proxy);
+                        break;
+                    case "8":
                         inCourseMenu = false;
                         break;
                     default:
@@ -1240,6 +1244,186 @@ namespace CLI.CMS.Handlers
             Console.WriteLine("\nPress any key to return...");
             Console.ReadKey();
         }
+
+
+        //Menu for assignment groups inside courses
+        //AssignmentGroups
+        public static void RunAssignmentGroupsMenu(Course course, SiteServiceProxy proxy)
+        {
+            bool inGroupMenu = true;
+
+            while (inGroupMenu)
+            {
+                Console.Clear();
+                Console.WriteLine("======================================");
+                Console.WriteLine($"  {course.Code} - Assignment Groups");
+                Console.WriteLine("======================================");
+
+                if (course.AssignmentGroup.Count == 0)
+                {
+                    Console.WriteLine("No assignment groups exist yet.");
+                }
+                else
+                {
+                    Console.WriteLine($"{"ID",-5} | {"Group Name",-20} | {"Weight",-8} | {"Assignments Count"}");
+                    Console.WriteLine(new string('-', 55));
+                    foreach (var group in course.AssignmentGroup)
+                    {
+                        Console.WriteLine($"{group.Id,-5} | {group.Name,-20} | {group.Weight,-8}% | {group.Assignments.Count}");
+                    }
+                }
+                Console.WriteLine(new string('-', 55));
+                Console.WriteLine("1. Create New Assignment Group");
+                Console.WriteLine("2. Edit Assignment Group");
+                Console.WriteLine("3. Delete Assignment Group");
+                Console.WriteLine("4. Add an Assignment to a Group");
+                Console.WriteLine("5. Return to Course Menu");
+                Console.WriteLine("======================================");
+                Console.Write("Enter choice (1-5): ");
+
+                string choice = (Console.ReadLine() ?? string.Empty).Trim();
+
+                switch (choice)
+                {
+                    case "1":
+                        CreateGroupForm(course);
+                        break;
+                    case "2":
+                        EditGroupForm(course);
+                        break;
+                    case "3":
+                        DeleteGroupForm(course);
+                        break;
+                    case "4":
+                        AddAssignmentToGroupForm(course);
+                        break;
+                    case "5":
+                        inGroupMenu = false;
+                        break;
+                    default:
+                        Console.WriteLine("\nInvalid option. Press any key...");
+                        Console.ReadKey();
+                        break;
+                }
+            }
+        }
+
+        //CRUD For assignment groups
+        private static void CreateGroupForm(Course course)
+        {
+            Console.Clear();
+            Console.WriteLine("--- Create Assignment Group ---");
+            Console.Write("Enter Group Name (e.g., Exams): ");
+            string name = Console.ReadLine() ?? string.Empty;
+            
+            if (string.IsNullOrWhiteSpace(name)) return;
+
+            Console.Write("Enter Weight Percentage (e.g., 30 for 30%): ");
+            if (!double.TryParse(Console.ReadLine(), out double weight) || weight < 0)
+            {
+                weight = 0;
+            }
+
+            int nextId = course.AssignmentGroup.Count > 0 ? course.AssignmentGroup.Max(g => g.Id) + 1 : 1;
+            course.AssignmentGroup.Add(new AssignmentGroup { Id = nextId, Name = name, Weight = weight });
+            
+            Console.WriteLine($"\nSuccess! Group '{name}' created.");
+            Console.ReadKey();
+        }
+
+        private static void EditGroupForm(Course course)
+        {
+            Console.Clear();
+            Console.WriteLine("--- Edit Assignment Group ---");
+            Console.Write("Enter Group ID to edit: ");
+            if (int.TryParse(Console.ReadLine(), out int id))
+            {
+                var group = course.AssignmentGroup.FirstOrDefault(g => g.Id == id);
+                if (group != null)
+                {
+                    Console.Write($"Enter new name (leave blank for '{group.Name}'): ");
+                    string inputName = Console.ReadLine() ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(inputName)) group.Name = inputName;
+
+                    Console.Write($"Enter new weight (leave blank for {group.Weight}%): ");
+                    string inputWeight = Console.ReadLine() ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(inputWeight) && double.TryParse(inputWeight, out double targetWeight))
+                    {
+                        group.Weight = targetWeight;
+                    }
+                    Console.WriteLine("\nGroup updated successfully!");
+                }
+                else Console.WriteLine("\nGroup not found.");
+            }
+            Console.ReadKey();
+        }
+
+        private static void DeleteGroupForm(Course course)
+        {
+            Console.Clear();
+            Console.WriteLine("--- Delete Assignment Group ---");
+            Console.Write("Enter Group ID to remove: ");
+            if (int.TryParse(Console.ReadLine(), out int id))
+            {
+                var group = course.AssignmentGroup.FirstOrDefault(g => g.Id == id);
+                if (group != null)
+                {
+                    course.AssignmentGroup.Remove(group);
+                    Console.WriteLine("\nGroup permanently removed.");
+                }
+                else Console.WriteLine("\nGroup not found.");
+            }
+            Console.ReadKey();
+        }
+        //CRUD for assignment groups ends
+
+        //Adding an assignment to the group
+        private static void AddAssignmentToGroupForm(Course course)
+        {
+            Console.Clear();
+            Console.WriteLine("--- Add Assignment to Group ---");
+            
+            if (course.AssignmentGroup.Count == 0 || course.Assignments.Count == 0)
+            {
+                Console.WriteLine("Ensure you have at least one Assignment Group and one Assignment created.");
+                Console.ReadKey();
+                return;
+            }
+
+            //choose group available
+            Console.WriteLine("Available Groups:");
+            foreach (var g in course.AssignmentGroup) Console.WriteLine($"  [ID: {g.Id}] {g.Name}");
+            Console.Write("Enter Group ID: ");
+            if (!int.TryParse(Console.ReadLine(), out int groupId)) return;
+            var group = course.AssignmentGroup.FirstOrDefault(g => g.Id == groupId);
+            if (group == null) return;
+
+            //choose available assignment
+            Console.Clear();
+            Console.WriteLine($"--- Adding Assignment to Group: {group.Name} ---");
+            Console.WriteLine("Available Course Assignments:");
+            foreach (var a in course.Assignments) Console.WriteLine($"  [ID: {a.Id}] {a.Name}");
+            Console.Write("Enter Assignment ID: ");
+            if (!int.TryParse(Console.ReadLine(), out int assignId)) return;
+            var assignment = course.Assignments.FirstOrDefault(a => a.Id == assignId);
+
+            if (assignment != null)
+            {
+                //checks and avoids for duplicate assignments
+                if (!group.Assignments.Any(a => a.Id == assignment.Id))
+                {
+                    group.Assignments.Add(assignment);
+                    Console.WriteLine($"\nSuccess! Added assignment '{assignment.Name}' to group '{group.Name}'.");
+                }
+                else
+                {
+                    Console.WriteLine("\nThis assignment is already grouped here.");
+                }
+            }
+            else Console.WriteLine("\nAssignment not found.");
+            Console.ReadKey();
+        }
+
 
 
 

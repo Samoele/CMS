@@ -13,5 +13,8 @@ namespace Library.CMS.Models
         public List<Student> Roster { get; set; } = new List<Student>();
         public List<Module> Modules { get; set; } = new List<Module>();
         public List<Assignment> Assignments { get; set; } = new List<Assignment>();
+
+        //holds assignment group list of assignments for said group
+        public List<AssignmentGroup> AssignmentGroup { get; set; } = new List<AssignmentGroup>();
     }
 }
