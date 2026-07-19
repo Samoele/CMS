@@ -20,10 +20,11 @@ namespace CLI.CMS.Handlers
                 Console.WriteLine("            Teacher Menu              ");
                 Console.WriteLine("======================================");
                 Console.WriteLine("1. Add a New Course");
-                Console.WriteLine("2. Select an Existing Course");
-                Console.WriteLine("3. Return to Main Menu");
+                Console.WriteLine("2. Copy a Course");
+                Console.WriteLine("3. Select an Existing Course");
+                Console.WriteLine("4. Return to Main Menu");
                 Console.WriteLine("======================================");
-                Console.Write("Enter choice (1-3): ");
+                Console.Write("Enter choice (1-4): ");
 
                 string? choice = Console.ReadLine();
 
@@ -34,10 +35,13 @@ namespace CLI.CMS.Handlers
                         CreateNewCourseForm(proxy);
                         break;
                     case "2":
+                        CopyCourseForm(proxy);
+                        break;
+                    case "3":
                         // Logic to select an existing course
                         SelectExistingCourseForm(proxy);
                         break;
-                    case "3": //exit the menu
+                    case "4": //exit the menu
                         inTeacherMenu = false;
                         break;
                         
@@ -1421,6 +1425,57 @@ namespace CLI.CMS.Handlers
                 }
             }
             else Console.WriteLine("\nAssignment not found.");
+            Console.ReadKey();
+        }
+
+        //CLI menu for cloning a course
+        public static void CopyCourseForm(SiteServiceProxy proxy)
+        {
+            Console.Clear();
+            Console.WriteLine("======================================");
+            Console.WriteLine("          Clone / Copy Course         ");
+            Console.WriteLine("======================================");
+
+            var courses = proxy.GetCourses();
+            if (courses.Count == 0)
+            {
+                Console.WriteLine("No existing courses available to clone.");
+                Console.ReadKey();
+                return;
+            }
+
+            foreach (var c in courses)
+            {
+                Console.WriteLine($"  [ID: {c.Id}] {c.Code} - {c.Name}");
+            }
+            Console.WriteLine("--------------------------------------");
+            Console.Write("Enter the ID of the course you want to copy: ");
+            
+            if (int.TryParse(Console.ReadLine(), out int targetId))
+            {
+                var targetCourse = proxy.GetCourseById(targetId);
+                if (targetCourse != null)
+                {
+                    Console.Write("Enter NEW Course Code (e.g., COP4813): ");
+                    string newCode = Console.ReadLine() ?? string.Empty;
+                    
+                    Console.Write("Enter NEW Course Name: ");
+                    string newName = Console.ReadLine() ?? string.Empty;
+
+                    if (!string.IsNullOrWhiteSpace(newCode) && !string.IsNullOrWhiteSpace(newName))
+                    {
+                        proxy.CloneCourse(targetId, newCode, newName);
+                        Console.WriteLine($"\nSuccess! Deep copy of '{targetCourse.Code}' created as '{newCode}'.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("\nError: Code and Name inputs cannot be left blank.");
+                    }
+                }
+                else Console.WriteLine("\nCourse not found.");
+            }
+            else Console.WriteLine("\nInvalid ID selection format.");
+
             Console.ReadKey();
         }
 

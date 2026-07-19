@@ -90,6 +90,12 @@ namespace Library.CMS.Services
             return Courses.FirstOrDefault(c => c.Id == id);
         }
 
+        //Retrieves all courses
+        public List<Course> GetCourses()
+        {
+            return Courses;
+        }
+
         //Adds a new course to the system and assigns it a unique ID
 
         public void AddCourse(Course course)
@@ -218,6 +224,45 @@ namespace Library.CMS.Services
                 
                 assignment.Submissions.Add(submission);
             }
+        }
+
+        //request to clone a course
+        public void CloneCourse(int originalCourseId, string newCode, string newName)
+        {
+            var original = GetCourseById(originalCourseId);
+            if (original == null) return;
+
+            //initialize new course container
+            var clonedCourse = new Course
+            {
+                Id = Courses.Count > 0 ? Courses.Max(c => c.Id) + 1 : 1,
+                Code = newCode,
+                Name = newName,
+                Roster = new List<Student>(), // Enforce clean slate for roster
+                Assignments = new List<Assignment>(),
+                Modules = new List<Module>(),
+                AssignmentGroup = new List<AssignmentGroup>()
+            };
+
+            //performs a deep clone of the course assignments
+            foreach (var assign in original.Assignments)
+            {
+                clonedCourse.Assignments.Add(assign.Clone());
+            }
+
+            //deep clone of the modules
+            foreach (var mod in original.Modules)
+            {
+                clonedCourse.Modules.Add(mod.Clone());
+            }
+
+            //performs a deep clone of assignment groups, connects newly cloned assignments
+            foreach (var group in original.AssignmentGroup)
+            {
+                clonedCourse.AssignmentGroup.Add(group.Clone(clonedCourse.Assignments));
+            }
+
+            Courses.Add(clonedCourse);
         }
 
 

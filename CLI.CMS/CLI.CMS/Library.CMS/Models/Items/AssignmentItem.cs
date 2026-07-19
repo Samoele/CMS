@@ -26,5 +26,12 @@ namespace Library.CMS.Models
             Console.WriteLine("\nPress any key to close assignment overview...");
             Console.ReadKey();
         }
+
+
+        public override ContentItem Clone()
+        {
+            //when deep copy is performed, this item is linked to a newly cloned copy of the assignment
+            return new AssignmentItem(this.LinkedAssignment.Clone()) { Id = this.Id };
+        }
     }
 }
