@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="App.CMS.Views.StudentPortalPage"
+             Title="Student Portal"
+             BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="25">
+
+            <!-- Student Selection Dropdown -->
+            <Frame BorderColor="#CBD5E1" CornerRadius="10" Padding="15" BackgroundColor="White">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Select Student Profile:" 
+                           FontSize="16" 
+                           FontAttributes="Bold" 
+                           TextColor="#334155" />
+                    
+                    <Picker x:Name="StudentPicker"
+                            Title="Choose a student..."
+                            ItemDisplayBinding="{Binding Name}"
+                            SelectedIndexChanged="OnStudentSelected"
+                            FontSize="16" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Enrolled Courses Section -->
+            <Label x:Name="CoursesHeaderLabel"
+                   Text="Enrolled Courses" 
+                   FontSize="20" 
+                   FontAttributes="Bold" 
+                   TextColor="#0F172A"
+                   IsVisible="False"
+                   Margin="0,10,0,0" />
+
+            <CollectionView x:Name="CoursesCollectionView" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame BorderColor="#E2E8F0" 
+                               CornerRadius="12" 
+                               Padding="15" 
+                               Margin="0,0,0,12" 
+                               BackgroundColor="White"
+                               HasShadow="True">
+                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+                                
+                                <Label Grid.Column="0" Grid.Row="0" 
+                                       Text="{Binding Name}" 
+                                       FontSize="18" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#1E293B" />
+                                
+                                <Label Grid.Column="0" Grid.Row="1" 
+                                       Text="{Binding Code, StringFormat='Code: {0}'}" 
+                                       FontSize="14" 
+                                       TextColor="#64748B" />
+
+                                <Button Grid.Column="1" Grid.RowSpan="2" 
+                                        Text="View Course" 
+                                        BackgroundColor="#2563EB" 
+                                        TextColor="White" 
+                                        CornerRadius="8"
+                                        VerticalOptions="Center"
+                                        Clicked="OnCourseClicked"
+                                        CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
