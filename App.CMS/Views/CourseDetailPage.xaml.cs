@@ -71,5 +71,52 @@ namespace App.CMS.Views
         {
             await Navigation.PopAsync();
         }
+
+        private Assignment _currentActiveAssignment;
+        private void OnOpenSubmissionFormClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is Assignment selectedAssignment)
+            {
+                _currentActiveAssignment = selectedAssignment;
+                SelectedAssignmentLabel.Text = $"Submitting: {selectedAssignment.Name}";
+                StudentResponseEditor.Text = string.Empty; // Clear previous text
+                SubmissionCard.IsVisible = true;
+            }
+        }
+
+        private async void OnSubmitResponseClicked(object sender, EventArgs e)
+        {
+            string responseText = StudentResponseEditor.Text?.Trim();
+
+            if (string.IsNullOrWhiteSpace(responseText))
+            {
+                await DisplayAlert("Validation Error", "Please enter a response before submitting.", "OK");
+                return;
+            }
+
+            if (_currentActiveAssignment != null)
+            {
+                // Attach response to model or handle submission logic in your backend
+                // _currentActiveAssignment.Submission = responseText;
+
+                await DisplayAlert("Success", $"Response submitted for '{_currentActiveAssignment.Name}'!", "OK");
+                
+                // Reset form
+                SubmissionCard.IsVisible = false;
+                StudentResponseEditor.Text = string.Empty;
+                _currentActiveAssignment = null;
+            }
+        }
+
+        private void OnCancelSubmissionClicked(object sender, EventArgs e)
+        {
+            SubmissionCard.IsVisible = false;
+            StudentResponseEditor.Text = string.Empty;
+            _currentActiveAssignment = null;
+        }
+
+
+
+
     }
 }

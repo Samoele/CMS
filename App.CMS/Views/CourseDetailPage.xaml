@@ -26,25 +26,83 @@
 
             <!-- Dynamic Content Area -->
             <!--Assignments List -->
-            <VerticalStackLayout x:Name="AssignmentsSection" Spacing="10" IsVisible="True">
+            <VerticalStackLayout x:Name="AssignmentsSection" Spacing="15" IsVisible="True">
                 <Label Text="Course Assignments" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+
                 <CollectionView x:Name="AssignmentsListView" SelectionMode="None">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Frame BorderColor="#E2E8F0" CornerRadius="8" Padding="12" Margin="0,0,0,8" BackgroundColor="White">
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <VerticalStackLayout Grid.Column="0">
-                                        <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
-                                        <Label Text="{Binding Description}" FontSize="13" TextColor="#64748B" />
-                                    </VerticalStackLayout>
-                                    <Label Grid.Column="1" Text="{Binding TotalAvailablePoints, StringFormat='{0} pts'}" FontSize="14" FontAttributes="Bold" TextColor="#2563EB" VerticalOptions="Center" />
-                                </Grid>
+                            <Frame BorderColor="#E2E8F0" CornerRadius="10" Padding="15" Margin="0,0,0,12" BackgroundColor="White">
+                                <VerticalStackLayout Spacing="10">
+                                    
+                                    <!-- Assignment Header Info -->
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <VerticalStackLayout Grid.Column="0">
+                                            <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                                            <Label Text="{Binding Description}" FontSize="13" TextColor="#64748B" />
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="1" Text="{Binding TotalAvailablePoints, StringFormat='{0} pts'}" FontSize="14" FontAttributes="Bold" TextColor="#2563EB" VerticalOptions="Center" />
+                                    </Grid>
+
+                                    <!-- Submit Button to toggle response box -->
+                                    <Button Text="Submit Assignment" 
+                                            BackgroundColor="#2563EB" 
+                                            TextColor="White" 
+                                            CornerRadius="6" 
+                                            HeightRequest="38"
+                                            HorizontalOptions="Start"
+                                            Clicked="OnOpenSubmissionFormClicked"
+                                            CommandParameter="{Binding .}" />
+
+                                </VerticalStackLayout>
                             </Frame>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
-            </VerticalStackLayout>
 
+                <!-- Submission Card/Shown when assignment is selected -->
+                <Frame x:Name="SubmissionCard" 
+                    BorderColor="#2563EB" 
+                    CornerRadius="10" 
+                    Padding="15" 
+                    BackgroundColor="#F0F6FF" 
+                    IsVisible="False">
+                    <VerticalStackLayout Spacing="12">
+                        <Label x:Name="SelectedAssignmentLabel" 
+                            FontSize="16" 
+                            FontAttributes="Bold" 
+                            TextColor="#1E3A8A" />
+
+                        <Label Text="Your Response:" 
+                            FontSize="14" 
+                            TextColor="#334155" />
+
+                        <!-- Multiline Textbox for Response -->
+                        <Editor x:Name="StudentResponseEditor" 
+                                Placeholder="Enter your assignment response here..." 
+                                HeightRequest="120" 
+                                BackgroundColor="White" 
+                                TextColor="#0F172A" 
+                                FontSize="14" />
+
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                            <Button Grid.Column="0" 
+                                    Text="Submit Response" 
+                                    BackgroundColor="#16A34A" 
+                                    TextColor="White" 
+                                    CornerRadius="6" 
+                                    Clicked="OnSubmitResponseClicked" />
+
+                            <Button Grid.Column="1" 
+                                    Text="Cancel" 
+                                    BackgroundColor="#94A3B8" 
+                                    TextColor="White" 
+                                    CornerRadius="6" 
+                                    Clicked="OnCancelSubmissionClicked" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
             <!-- Modules List -->
             <VerticalStackLayout x:Name="ModulesSection" Spacing="10" IsVisible="False">
                 <Label Text="Course Modules &amp; Content" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
