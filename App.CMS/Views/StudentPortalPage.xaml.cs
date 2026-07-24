@@ -48,8 +48,24 @@ namespace App.CMS.Views
             if (sender is Button button && button.CommandParameter is Course selectedCourse)
             {
                 // Action handler when interacting with a specific course
-                await DisplayAlert("Course Actions", $"Opening portal for {selectedCourse.Name}...", "OK");
+                if (StudentPicker.SelectedItem is Student currentStudent)
+                {
+                    //navigates tp course selected passing the selected Course and Student
+                    await Navigation.PushAsync(new CourseDetailPage(selectedCourse, currentStudent));
+                }
             }
         }
+
+        private async void OnReturnToMainMenuClicked(object sender, EventArgs e)
+        {
+            // Pop back to the previous screen on the navigation stack
+            await Navigation.PopAsync();
+        }
+
+
+
+
+
+
     }
 }

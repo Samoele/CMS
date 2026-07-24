@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="App.CMS.Views.TeacherPortalPage"
+             Title="Instructor Portal"
+             BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="25" VerticalOptions="Center">
+
+            <Label Text="👨‍🏫 Teacher Dashboard" 
+                   FontSize="26" 
+                   FontAttributes="Bold" 
+                   TextColor="#0F172A" 
+                   HorizontalOptions="Center" />
+
+            <Label Text="Welcome to the Teacher Management Portal."
+                   FontSize="16"
+                   TextColor="#64748B"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,30" />
+
+            <!--placeholder Teacher Actions -->
+            <Button Text="Manage Courses" BackgroundColor="#0F172A" TextColor="White" HeightRequest="50" CornerRadius="8" />
+            <Button Text="Manage Assignments and Grades" BackgroundColor="#0F172A" TextColor="White" HeightRequest="50" CornerRadius="8" />
+
+            <!--return to main menu button-->
+            <Button Text="⬅️  Return to Main Menu"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    BackgroundColor="#475569"
+                    TextColor="White"
+                    CornerRadius="10"
+                    HeightRequest="50"
+                    Margin="0,30,0,0"
+                    Clicked="OnReturnToMainMenuClicked" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
