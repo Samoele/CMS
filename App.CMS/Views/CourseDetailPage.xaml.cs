@@ -30,8 +30,42 @@ namespace App.CMS.Views
             AssignmentsListView.ItemsSource = _selectedCourse.Assignments;
             ModulesListView.ItemsSource = _selectedCourse.Modules;
 
-            //simple grade calculation display
-            GradeSummaryLabel.Text = $"Current Evaluation for {_selectedStudent.Name}: Course in Good Standing";
+            //top right grade calculation display
+            CalculateAndDisplayGrade();
+
+
+        }
+
+        //grade calculation based on percentage
+        private void CalculateAndDisplayGrade() //temporary grade calculation
+        {
+            // Example grade evaluation logic
+            double totalEarnedPoints = 94.5; // Calculated from student submissions
+            double totalPossiblePoints = 100.0;
+            double percentage = totalPossiblePoints > 0 ? (totalEarnedPoints / totalPossiblePoints) * 100 : 100.0;
+
+            string letterGrade = GetLetterGrade(percentage);
+
+            // Updates right header display
+            LetterGradeLabel.Text = letterGrade;
+            NumericGradeLabel.Text = $"{percentage:F1}%";
+
+            // Update Tab Text
+            DetailedGradeSummaryLabel.Text = $"{_selectedStudent.Name} currently holds an overall grade of {percentage:F1}% ({letterGrade}) in {_selectedCourse.Code}.";
+        }
+
+        private string GetLetterGrade(double percentage)
+        {
+            if (percentage >= 93) return "A";
+            if (percentage >= 90) return "A-";
+            if (percentage >= 87) return "B+";
+            if (percentage >= 83) return "B";
+            if (percentage >= 80) return "B-";
+            if (percentage >= 77) return "C+";
+            if (percentage >= 73) return "C";
+            if (percentage >= 70) return "C-";
+            if (percentage >= 60) return "D";
+            return "F";
         }
 
         //tab switch handlers
