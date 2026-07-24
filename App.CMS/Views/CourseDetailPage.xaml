@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="App.CMS.Views.CourseDetailPage"
+             Title="Course Details"
+             BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+
+            <!-- Course Header Card -->
+            <Frame BackgroundColor="#0F172A" CornerRadius="12" Padding="20" HasShadow="True">
+                <VerticalStackLayout Spacing="6">
+                    <Label x:Name="CourseNameLabel" FontSize="22" FontAttributes="Bold" TextColor="White" />
+                    <Label x:Name="CourseCodeLabel" FontSize="14" TextColor="#94A3B8" />
+                    <Label x:Name="CourseDescriptionLabel" FontSize="14" TextColor="#CBD5E1" Margin="0,5,0,0" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Interaction Sections -->
+            <Grid ColumnDefinitions="*, *, *" ColumnSpacing="10">
+                <Button x:Name="BtnAssignments" Grid.Column="0" Text="Assignments" BackgroundColor="#2563EB" TextColor="White" CornerRadius="8" Clicked="OnAssignmentsTabClicked" />
+                <Button x:Name="BtnModules" Grid.Column="1" Text="Modules" BackgroundColor="#475569" TextColor="White" CornerRadius="8" Clicked="OnModulesTabClicked" />
+                <Button x:Name="BtnGrades" Grid.Column="2" Text="Grades" BackgroundColor="#475569" TextColor="White" CornerRadius="8" Clicked="OnGradesTabClicked" />
+            </Grid>
+
+            <!-- Dynamic Content Area -->
+            <!--Assignments List -->
+            <VerticalStackLayout x:Name="AssignmentsSection" Spacing="10" IsVisible="True">
+                <Label Text="Course Assignments" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+                <CollectionView x:Name="AssignmentsListView" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame BorderColor="#E2E8F0" CornerRadius="8" Padding="12" Margin="0,0,0,8" BackgroundColor="White">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <VerticalStackLayout Grid.Column="0">
+                                        <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                                        <Label Text="{Binding Description}" FontSize="13" TextColor="#64748B" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" Text="{Binding TotalAvailablePoints, StringFormat='{0} pts'}" FontSize="14" FontAttributes="Bold" TextColor="#2563EB" VerticalOptions="Center" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- Modules List -->
+            <VerticalStackLayout x:Name="ModulesSection" Spacing="10" IsVisible="False">
+                <Label Text="Course Modules &amp; Content" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+                <CollectionView x:Name="ModulesListView" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame BorderColor="#E2E8F0" CornerRadius="8" Padding="12" Margin="0,0,0,8" BackgroundColor="White">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                                    <Label Text="{Binding Description}" FontSize="13" TextColor="#64748B" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!--Grades Section -->
+            <VerticalStackLayout x:Name="GradesSection" Spacing="10" IsVisible="False">
+                <Label Text="Your Course Grade" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+                <Frame BorderColor="#CBD5E1" CornerRadius="8" Padding="15" BackgroundColor="White">
+                    <VerticalStackLayout Spacing="8">
+                        <Label x:Name="GradeSummaryLabel" FontSize="16" TextColor="#334155" />
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+
+            <!-- Navigation Back Button -->
+            <Button Text="⬅️ Back to Student Portal" BackgroundColor="#64748B" TextColor="White" CornerRadius="8" HeightRequest="45" Margin="0,15,0,0" Clicked="OnBackClicked" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

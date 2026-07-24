@@ -69,6 +69,19 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
+
+
+            <!-- Return to Main Menu Button -->
+            <Button Text="⬅️  Return to Main Menu"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    BackgroundColor="#475569"
+                    TextColor="White"
+                    CornerRadius="10"
+                    HeightRequest="50"
+                    Margin="0,20,0,0"
+                    Clicked="OnReturnToMainMenuClicked" />
+
         </VerticalStackLayout>
     </ScrollView>
 

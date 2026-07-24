@@ -12,15 +12,16 @@ namespace App.CMS.Views
 
         private async void OnTeacherButtonClicked(object sender, EventArgs e)
         {
-            // Placeholder for Instructor Dashboard navigation
-            await DisplayAlert("Portal Selected", "Entering the Instructor Portal...", "OK");
+            //navigate to Teacher page
+            await Navigation.PushAsync(new TeacherPortalPage());
         }
 
         private async void OnStudentButtonClicked(object sender, EventArgs e)
         {
            
-            // Navigate to the StudentPortalPage
+            //navigate to the StudentPortalPage
             await Navigation.PushAsync(new StudentPortalPage());
         }
+
     }
 }
