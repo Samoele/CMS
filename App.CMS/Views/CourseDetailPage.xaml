@@ -8,14 +8,54 @@
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="20">
 
-            <!-- Course Header Card -->
-            <Frame BackgroundColor="#0F172A" CornerRadius="12" Padding="20" HasShadow="True">
-                <VerticalStackLayout Spacing="6">
-                    <Label x:Name="CourseNameLabel" FontSize="22" FontAttributes="Bold" TextColor="White" />
-                    <Label x:Name="CourseCodeLabel" FontSize="14" TextColor="#94A3B8" />
-                    <Label x:Name="CourseDescriptionLabel" FontSize="14" TextColor="#CBD5E1" Margin="0,5,0,0" />
-                </VerticalStackLayout>
-            </Frame>
+            <!-- Course Header Card with Top-Right Grade Display -->
+            <Border BackgroundColor="#0F172A" StrokeShape="RoundRectangle 12" Padding="20">
+                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="15">
+                    
+                    <!-- Course info on the left side-->
+                    <VerticalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
+                        <Label x:Name="CourseNameLabel" FontSize="22" FontAttributes="Bold" TextColor="White" />
+                        <Label x:Name="CourseCodeLabel" FontSize="14" TextColor="#94A3B8" />
+                        <Label x:Name="CourseDescriptionLabel" FontSize="14" TextColor="#CBD5E1" Margin="0,5,0,0" />
+                    </VerticalStackLayout>
+
+                    <!-- top right grade badge-->
+                    <Border Grid.Column="1" 
+                            x:Name="GradeBadgeBorder"
+                            BackgroundColor="#1E293B" 
+                            Stroke="#3B82F6" 
+                            StrokeThickness="2" 
+                            StrokeShape="RoundRectangle 10" 
+                            Padding="12,8" 
+                            VerticalOptions="Start" 
+                            HorizontalOptions="End">
+                        <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                            <Label Text="CURRENT GRADE" 
+                                   FontSize="10" 
+                                   FontAttributes="Bold" 
+                                   TextColor="#94A3B8" 
+                                   HorizontalOptions="Center" />
+                            
+                            <!--letter grade (A for now) -->
+                            <Label x:Name="LetterGradeLabel" 
+                                   Text="A" 
+                                   FontSize="26" 
+                                   FontAttributes="Bold" 
+                                   TextColor="#22C55E" 
+                                   HorizontalOptions="Center" />
+                            
+                            <!--num grade in percentage (default for now) -->
+                            <Label x:Name="NumericGradeLabel" 
+                                   Text="94.5%" 
+                                   FontSize="13" 
+                                   FontAttributes="Bold" 
+                                   TextColor="#F8FAFC" 
+                                   HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                </Grid>
+            </Border>
 
             <!-- Interaction Sections -->
             <Grid ColumnDefinitions="*, *, *" ColumnSpacing="10">
@@ -125,7 +165,7 @@
                 <Label Text="Your Course Grade" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
                 <Frame BorderColor="#CBD5E1" CornerRadius="8" Padding="15" BackgroundColor="White">
                     <VerticalStackLayout Spacing="8">
-                        <Label x:Name="GradeSummaryLabel" FontSize="16" TextColor="#334155" />
+                        <Label x:Name="DetailedGradeSummaryLabel" FontSize="16" TextColor="#334155" />
                     </VerticalStackLayout>
                 </Frame>
             </VerticalStackLayout>
