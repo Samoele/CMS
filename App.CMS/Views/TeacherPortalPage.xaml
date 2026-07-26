@@ -6,54 +6,101 @@
              BackgroundColor="#F8FAFC">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="20" Padding="25" VerticalOptions="Center">
+        <VerticalStackLayout Spacing="20" Padding="25">
 
-            <Label Text="👨‍🏫 Teacher Dashboard" 
+            <!-- Dashboard Header -->
+            <Label Text="👨‍🏫 Instructor Dashboard" 
                    FontSize="26" 
                    FontAttributes="Bold" 
-                   TextColor="#0F172A" 
-                   HorizontalOptions="Center" />
+                   TextColor="#0F172A" />
 
-            <Label Text="Welcome to the Teacher Management Portal."
-                   FontSize="16"
-                   TextColor="#64748B"
-                   HorizontalOptions="Center"
-                   Margin="0,0,0,30" />
+            <Label Text="Select an option below:"
+                   FontSize="15"
+                   TextColor="#64748B" />
 
-            <!--Teacher Actions -->
-            <!--List of courses to manage, then send to manage course page with extended actions-->
+            <!--teacher management options-->
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                
+                <!--manage courses button -->
+                <Border Grid.Column="0" 
+                        StrokeShape="RoundRectangle 10" 
+                        Padding="15" 
+                        BackgroundColor="White" 
+                        Stroke="#E2E8F0">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="📚 Courses" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />
+                        <Label Text="View, edit rosters, assignments, and modules for active courses." FontSize="12" TextColor="#64748B" />
+                        <Button Text="Manage Courses" 
+                                BackgroundColor="#0F172A" 
+                                TextColor="White" 
+                                CornerRadius="8" 
+                                HeightRequest="40"
+                                Margin="0,5,0,0"
+                                Clicked="OnShowCoursesClicked" />
+                    </VerticalStackLayout>
+                </Border>
 
-            <CollectionView x:Name="TeacherCoursesCollectionView" SelectionMode="None">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border StrokeShape="RoundRectangle 10" Padding="15" Margin="0,0,0,12" BackgroundColor="White">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <VerticalStackLayout Grid.Column="0" Spacing="4">
-                                    <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
-                                    <Label Text="{Binding Code, StringFormat='Course Code: {0}'}" FontSize="14" TextColor="#64748B" />
-                                </VerticalStackLayout>
-                                
-                                <Button Grid.Column="1" 
-                                        Text="Manage Course" 
-                                        BackgroundColor="#0F172A" 
-                                        TextColor="White" 
-                                        CornerRadius="8" 
-                                        Clicked="OnManageCourseClicked" />
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                <!-- manage system directory-->
+                <Border Grid.Column="1" 
+                        StrokeShape="RoundRectangle 10" 
+                        Padding="15" 
+                        BackgroundColor="White" 
+                        Stroke="#E2E8F0">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="🎓 System Roster" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />
+                        <Label Text="Add, update, or remove student accounts across the university." FontSize="12" TextColor="#64748B" />
+                        <Button Text="Manage Students" 
+                                BackgroundColor="#2563EB" 
+                                TextColor="White" 
+                                CornerRadius="8" 
+                                HeightRequest="40"
+                                Margin="0,5,0,0"
+                                Clicked="OnManageStudentsClicked" />
+                    </VerticalStackLayout>
+                </Border>
 
-            <!--return to main menu button-->
-            <Button Text="⬅️  Return to Main Menu"
+            </Grid>
+
+            <!--course list selection-->
+            <VerticalStackLayout x:Name="CoursesSection" Spacing="12" Margin="0,10,0,0" IsVisible="False">
+                <Label Text="Active Managed Courses" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+
+                <CollectionView x:Name="TeacherCoursesCollectionView" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 10" 
+                                    Padding="15" 
+                                    Margin="0,0,0,12" 
+                                    BackgroundColor="White"
+                                    Stroke="#E2E8F0">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                        <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+                                        <Label Text="{Binding Code, StringFormat='Course Code: {0}'}" FontSize="14" TextColor="#64748B" />
+                                    </VerticalStackLayout>
+                                    
+                                    <Button Grid.Column="1" 
+                                            Text="Manage Course" 
+                                            BackgroundColor="#0F172A" 
+                                            TextColor="White" 
+                                            CornerRadius="8" 
+                                            Clicked="OnManageCourseClicked" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- return to main menu -->
+            <Button Text="⬅️ Return to Main Menu"
                     FontSize="16"
                     FontAttributes="Bold"
                     BackgroundColor="#475569"
                     TextColor="White"
                     CornerRadius="10"
                     HeightRequest="50"
-                    Margin="0,30,0,0"
+                    Margin="0,15,0,0"
                     Clicked="OnReturnToMainMenuClicked" />
 
         </VerticalStackLayout>

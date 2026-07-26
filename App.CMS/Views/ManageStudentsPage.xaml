@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="App.CMS.Views.ManageStudentsPage"
+             Title="Manage University Students"
+             BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+
+            <Label Text="🎓 System Student Directory" FontSize="22" FontAttributes="Bold" TextColor="#0F172A" />
+            <Label Text="Add, update, or remove student accounts across the university." FontSize="14" TextColor="#64748B" />
+
+            <!-- Add / Edit Student Form Card -->
+            <!--Student input form -->
+            <Border StrokeShape="RoundRectangle 10" Padding="15" BackgroundColor="White" Stroke="#E2E8F0">
+                <VerticalStackLayout Spacing="10">
+                    <Label x:Name="FormHeaderLabel" Text="Add New Student" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" />
+                    
+                    <Entry x:Name="StudentNameEntry" Placeholder="Full Name (e.g. Charlie Brown)" />
+                    
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                        <!--Auto ID generation-->
+                        <Picker x:Name="ClassificationPicker" Grid.Column="1" Title="Classification">
+                            <Picker.Items>
+                                <x:String>Freshman</x:String>
+                                <x:String>Sophomore</x:String>
+                                <x:String>Junior</x:String>
+                                <x:String>Senior</x:String>
+                            </Picker.Items>
+                        </Picker>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,5,0,0">
+                        <Button x:Name="SaveStudentBtn" Grid.Column="0" Text="Save Student" BackgroundColor="#16A34A" TextColor="White" CornerRadius="6" Clicked="OnSaveStudentClicked" />
+                        <Button x:Name="CancelEditBtn" Grid.Column="1" Text="Cancel" BackgroundColor="#64748B" TextColor="White" CornerRadius="6" IsVisible="False" Clicked="OnCancelEditClicked" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!--active student roster -->
+            <CollectionView x:Name="StudentsCollectionView" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border StrokeShape="RoundRectangle 8" Padding="12" Margin="0,0,0,8" BackgroundColor="White" Stroke="#CBD5E1">
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                                <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                                        <!--show classification -->
+                                        <Label Text="{Binding Classification, StringFormat='({0})'}" FontSize="14" TextColor="#2563EB" FontAttributes="Italic" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding Id, StringFormat='ID: {0}'}" FontSize="12" TextColor="#64748B" />
+                                </VerticalStackLayout>
+
+                                <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                                    <Button Text="Edit" BackgroundColor="#2563EB" TextColor="White" CornerRadius="6" HeightRequest="36" Clicked="OnEditStudentClicked" CommandParameter="{Binding .}" />
+                                    <Button Text="Delete" BackgroundColor="#EF4444" TextColor="White" CornerRadius="6" HeightRequest="36" Clicked="OnDeleteStudentClicked" CommandParameter="{Binding .}" />
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+
+            <!-- Go back Button -->
+            <Button Text="⬅️ Back to Teacher Dashboard" BackgroundColor="#64748B" TextColor="White" CornerRadius="8" HeightRequest="45" Clicked="OnBackClicked" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
