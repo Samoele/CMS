@@ -76,20 +76,20 @@
                 </Border>
             </VerticalStackLayout>
 
-            <!--SECTION 2: ASSIGNMENTS MANAGEMENT (Placeholder for next step) -->
+            <!--assignments management(placeholder for now) -->
             <VerticalStackLayout x:Name="AssignmentsSection" Spacing="10" IsVisible="False">
                 <Label Text="Course Assignments Management" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
                 <Label Text="Instructor assignment creation and editing tools will go here." TextColor="#64748B" />
             </VerticalStackLayout>
 
-            <!--SECTION 3: MODULES MANAGEMENT (Placeholder for next step) -->
+            <!--modules management (placeholder for now)-->
             <VerticalStackLayout x:Name="ModulesSection" Spacing="10" IsVisible="False">
                 <Label Text="Course Modules Management" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
                 <Label Text="Instructor module and content editing tools will go here." TextColor="#64748B" />
             </VerticalStackLayout>
 
             <!-- Go Back Button -->
-            <Button Text="⬅️ Back to Instructor Dashboard" 
+            <Button Text="⬅️ Back to Teacher Dashboard" 
                     BackgroundColor="#64748B" 
                     TextColor="White" 
                     CornerRadius="8" 

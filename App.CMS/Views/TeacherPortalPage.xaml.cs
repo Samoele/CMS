@@ -15,11 +15,11 @@ namespace App.CMS.Views
         
 
         //reload courses every time the page becomes visible
-        protected override void OnAppearing()
-        {
-            base.OnAppearing();
-            LoadTeacherCourses();
-        }
+        // protected override void OnAppearing()
+        // {
+        //     base.OnAppearing();
+        //     LoadTeacherCourses();
+        // }
 
         private void LoadTeacherCourses()
         {
@@ -28,20 +28,34 @@ namespace App.CMS.Views
             TeacherCoursesCollectionView.ItemsSource = courses;
         }
 
+
+        private void OnShowCoursesClicked(object sender, EventArgs e)
+        {
+            CoursesSection.IsVisible = true;
+            LoadTeacherCourses();
+        }
+
         private async void OnManageCourseClicked(object sender, EventArgs e)
         {
-            
-            Button? button = sender as Button;
+            if (sender is Button button)
+            {
+                // retrieves course 
+                Course? selectedCourse = button.CommandParameter as Course ?? button.BindingContext as Course;
 
-            //checks that button exists and its BindingContext is a Course //fixes error button unsassigned value
-            if (button != null && button.BindingContext is Course selectedCourse)
-            {
-                await Navigation.PushAsync(new TeacherCourseDetailPage(selectedCourse));
+                if (selectedCourse != null)
+                {
+                    await Navigation.PushAsync(new TeacherCourseDetailPage(selectedCourse));
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Could not retrieve course details from selection.", "OK");
+                }
             }
-            else
-            {
-                await DisplayAlert("Error", "Could not retrieve course details from selection.", "OK");
-            }
+        }
+
+        private async void OnManageStudentsClicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new ManageStudentsPage());
         }
         private async void OnReturnToMainMenuClicked(object sender, EventArgs e)
         {
