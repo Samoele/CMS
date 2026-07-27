@@ -147,10 +147,92 @@
                 </CollectionView>
             </VerticalStackLayout>
 
-            <!--modules management (placeholder for now)-->
-            <VerticalStackLayout x:Name="ModulesSection" Spacing="10" IsVisible="False">
-                <Label Text="Course Modules Management" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
-                <Label Text="Instructor module and content editing tools will go here." TextColor="#64748B" />
+            <!--Section 3: Module Management-->
+            <VerticalStackLayout x:Name="ModulesSection" Spacing="15" IsVisible="False">
+                <Label Text="Course Module Management" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+
+                <!-- Create / Edit Module Form -->
+                <Border StrokeShape="RoundRectangle 10" Padding="15" BackgroundColor="White" Stroke="#E2E8F0">
+                    <VerticalStackLayout Spacing="12">
+                        <Label x:Name="ModuleFormHeader" Text="Add New Module" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+
+                        <Entry x:Name="ModuleNameEntry" Placeholder="Module Name (e.g. Unit 1: Introduction to Data Structures)" />
+                        <Editor x:Name="ModuleDescriptionEntry" Placeholder="Module Description / Overview..." HeightRequest="70" />
+
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,5,0,0">
+                            <Button x:Name="SaveModuleBtn" Grid.Column="0" Text="Save Module" BackgroundColor="#16A34A" TextColor="White" CornerRadius="6" Clicked="OnSaveModuleClicked" />
+                            <Button x:Name="CancelModuleEditBtn" Grid.Column="1" Text="Cancel" BackgroundColor="#64748B" TextColor="White" CornerRadius="6" IsVisible="False" Clicked="OnCancelModuleEditClicked" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!--existing modules list -->
+                <Label Text="Course Modules:" FontSize="14" FontAttributes="Bold" TextColor="#475569" Margin="0,10,0,0" />
+
+                <CollectionView x:Name="ModulesCollectionView" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 8" Padding="15" Margin="0,0,0,12" BackgroundColor="White" Stroke="#CBD5E1">
+                                <VerticalStackLayout Spacing="10">
+
+                                    <!-- module header and options -->
+                                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                                            <Label Text="{Binding Description}" FontSize="13" TextColor="#475569" />
+                                        </VerticalStackLayout>
+
+                                        <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                                            <Button Text="+ Content" BackgroundColor="#059669" TextColor="White" CornerRadius="6" HeightRequest="34" Clicked="OnAddContentClicked" CommandParameter="{Binding .}" />
+                                            <Button Text="Edit" BackgroundColor="#2563EB" TextColor="White" CornerRadius="6" HeightRequest="34" Clicked="OnEditModuleClicked" CommandParameter="{Binding .}" />
+                                            <Button Text="Delete" BackgroundColor="#EF4444" TextColor="White" CornerRadius="6" HeightRequest="34" Clicked="OnDeleteModuleClicked" CommandParameter="{Binding .}" />
+                                        </HorizontalStackLayout>
+                                    </Grid>
+
+                                    <!--Module content item list-->
+                                    <Border BackgroundColor="#F8FAFC" Padding="10" StrokeShape="RoundRectangle 6" Stroke="#E2E8F0">
+                                        <VerticalStackLayout Spacing="8">
+                                            <Label Text="Module Contents / Readings:" FontSize="12" FontAttributes="Bold" TextColor="#64748B" />
+
+                                            <CollectionView ItemsSource="{Binding Content}" SelectionMode="None">
+                                                <CollectionView.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid ColumnDefinitions="*, Auto" Margin="0,2,0,2">
+                                                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                                                <Label Text="{Binding Name}" FontSize="13" FontAttributes="Bold" TextColor="#1E293B" />
+                                                                <!--Page Body Display (PageItem.Body) -->
+                                                                <Label Text="{Binding Body, StringFormat='📄 Body: {0}'}" 
+                                                                    FontSize="12" 
+                                                                    TextColor="#334155" 
+                                                                    MaxLines="3" 
+                                                                    LineBreakMode="TailTruncation" />
+
+                                                                <!-- FilePath Display (FilePath)-->
+                                                                <Label Text="{Binding FilePath, StringFormat='📁 Path: {0}'}" 
+                                                                    FontSize="12" 
+                                                                    TextColor="#2563EB" 
+                                                                    MaxLines="1" 
+                                                                    LineBreakMode="MiddleTruncation" />
+                                                            </VerticalStackLayout>
+
+                                                            <!--Content control options-->
+                                                            <HorizontalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                                                <Button Text="View" BackgroundColor="#0F172A" TextColor="White" CornerRadius="4" HeightRequest="30" FontSize="11" Clicked="OnViewContentItemClicked" CommandParameter="{Binding .}" />
+                                                                <Button Text="Edit" BackgroundColor="#3B82F6" TextColor="White" CornerRadius="4" HeightRequest="30" FontSize="11" Clicked="OnEditContentItemClicked" CommandParameter="{Binding .}" />
+                                                                <Button Text="Delete" BackgroundColor="#EF4444" TextColor="White" CornerRadius="4" HeightRequest="30" FontSize="11" Clicked="OnDeleteContentItemClicked" CommandParameter="{Binding .}" />
+                                                            </HorizontalStackLayout>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </CollectionView.ItemTemplate>
+                                            </CollectionView>
+                                        </VerticalStackLayout>
+                                    </Border>
+
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
             </VerticalStackLayout>
 
             <!-- Go Back Button -->

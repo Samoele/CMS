@@ -191,6 +191,31 @@ namespace App.CMS.Views
         }
 
 
+        //method for opening content in a module
+        private async void OnOpenModuleContentClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is ContentItem item)
+            {
+                if (item is PageItem page)
+                {
+                    string bodyText = string.IsNullOrWhiteSpace(page.Body) 
+                        ? "[This page has no content provided yet.]" 
+                        : page.Body;
+
+                    await DisplayAlert($"📄 {page.Name}", bodyText, "Close");
+                }
+                else if (item is FileItem file)
+                {
+                    string pathText = string.IsNullOrWhiteSpace(file.FilePath) 
+                        ? "[No file path or URL provided.]" 
+                        : file.FilePath;
+
+                    await DisplayAlert($"📁 {file.Name}", $"File Path / Resource URL:\n\n{pathText}", "Close");
+                }
+            }
+        }
+
+
 
 
 

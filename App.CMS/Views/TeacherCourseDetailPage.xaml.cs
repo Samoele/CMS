@@ -89,6 +89,8 @@ namespace App.CMS.Views
         {
             SetTabVisibility(roster: false, assignments: false, modules: true);
             HighlightButton(BtnModules, BtnRoster, BtnAssignments);
+
+            RefreshModulesView();
         }
 
         private void SetTabVisibility(bool roster, bool assignments, bool modules)
@@ -240,6 +242,226 @@ namespace App.CMS.Views
             if (sender is Button button && button.BindingContext is Assignment assignment)
             {
                 await Navigation.PushAsync(new AssignmentSubmissionsPage(assignment));
+            }
+        }
+
+        //Module Management methods
+        private Module? _editingModule = null;
+
+        private void RefreshModulesView()
+        {
+            _selectedCourse.Modules ??= new List<Module>();
+            ModulesCollectionView.ItemsSource = null;
+            ModulesCollectionView.ItemsSource = _selectedCourse.Modules;
+        }
+
+        private async void OnSaveModuleClicked(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(ModuleNameEntry.Text))
+            {
+                await DisplayAlert("Validation Error", "Please provide a module name.", "OK");
+                return;
+            }
+
+            if (_editingModule != null)
+            {
+                // Update Module
+                _editingModule.Name = ModuleNameEntry.Text.Trim();
+                _editingModule.Description = ModuleDescriptionEntry.Text?.Trim() ?? string.Empty;
+                await DisplayAlert("Success", $"Module '{_editingModule.Name}' updated successfully.", "OK");
+            }
+            else
+            {
+                //adds module with auto increment ID
+                int nextId = _selectedCourse.Modules.Any() 
+                    ? _selectedCourse.Modules.Max(m => m.Id) + 1 : 1;
+
+                var newModule = new Module
+                {
+                    Id = nextId,
+                    Name = ModuleNameEntry.Text.Trim(),
+                    Description = ModuleDescriptionEntry.Text?.Trim() ?? string.Empty,
+                    Content = new List<ContentItem>()
+                };
+
+                _selectedCourse.Modules.Add(newModule);
+                await DisplayAlert("Success", $"Module '{newModule.Name}' created.", "OK");
+            }
+
+            ResetModuleForm();
+            RefreshModulesView();
+        }
+
+        private void OnEditModuleClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.BindingContext is Module moduleToEdit)
+            {
+                _editingModule = moduleToEdit;
+                ModuleFormHeader.Text = $"Edit Module: {moduleToEdit.Name}";
+                ModuleNameEntry.Text = moduleToEdit.Name;
+                ModuleDescriptionEntry.Text = moduleToEdit.Description;
+
+                SaveModuleBtn.Text = "Update Module";
+                CancelModuleEditBtn.IsVisible = true;
+            }
+        }
+
+        private async void OnDeleteModuleClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.BindingContext is Module moduleToDelete)
+            {
+                bool confirm = await DisplayAlert(
+                    "⚠️ Confirm Deletion",
+                    $"Are you sure you want to delete module '{moduleToDelete.Name}'?\n\nThis will permanently delete all content items within this module.",
+                    "Delete Module",
+                    "Cancel");
+
+                if (confirm)
+                {
+                    moduleToDelete.Content?.Clear(); //clears nested content
+                    _selectedCourse.Modules.Remove(moduleToDelete);
+
+                    if (_editingModule == moduleToDelete)
+                    {
+                        ResetModuleForm();
+                    }
+
+                    await DisplayAlert("Deleted", $"Module '{moduleToDelete.Name}' removed.", "OK");
+                    RefreshModulesView();
+                }
+            }
+        }
+
+        private void OnCancelModuleEditClicked(object sender, EventArgs e) => ResetModuleForm();
+
+        private void ResetModuleForm()
+        {
+            _editingModule = null;
+            ModuleFormHeader.Text = "Add New Module";
+            ModuleNameEntry.Text = string.Empty;
+            ModuleDescriptionEntry.Text = string.Empty;
+            SaveModuleBtn.Text = "Save Module";
+            CancelModuleEditBtn.IsVisible = false;
+        }
+
+        //Content management inside modules
+        private async void OnAddContentClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.BindingContext is Module targetModule)
+            {
+                //Let teacher select Content Type betweeen page and file
+                string action = await DisplayActionSheet(
+                    "Select Content Type", 
+                    "Cancel", 
+                    null, 
+                    "📄 Page (Text / Reading)", 
+                    "📁 File (Document / Link Path)");
+
+                if (action == "Cancel" || string.IsNullOrWhiteSpace(action)) return;
+
+                //Prompts for Content Title
+                string name = await DisplayPromptAsync("New Content Item", "Enter Item Title/Name:");
+                if (string.IsNullOrWhiteSpace(name)) return;
+
+                targetModule.Content ??= new List<ContentItem>();
+                int nextId = targetModule.Content.Any() ? targetModule.Content.Max(c => c.Id) + 1 : 1;
+
+                ContentItem newItem;
+
+                if (action.Contains("Page"))
+                {
+                    // Prompt for Page Body
+                    string body = await DisplayPromptAsync("Page Content", "Enter the page body text/content:");
+                    
+                    newItem = new PageItem
+                    {
+                        Id = nextId,
+                        Name = name.Trim(),
+                        Body = body?.Trim() ?? string.Empty
+                    };
+                }
+                else
+                {
+                    // Prompt for FilePath
+                    string filePath = await DisplayPromptAsync("File Details", "Enter file path or URL:");
+
+                    newItem = new FileItem
+                    {
+                        Id = nextId,
+                        Name = name.Trim(),
+                        FilePath = filePath?.Trim() ?? string.Empty
+                    };
+                }
+
+                targetModule.Content.Add(newItem);
+
+                await DisplayAlert("Success", $"Added '{newItem.Name}' to module '{targetModule.Name}'.", "OK");
+                RefreshModulesView();
+            }
+        }
+        private async void OnEditContentItemClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.BindingContext is ContentItem contentToEdit)
+            {
+                string newName = await DisplayPromptAsync("Edit Content Item", "Update Name:", initialValue: contentToEdit.Name);
+                if (string.IsNullOrWhiteSpace(newName)) return;
+
+                contentToEdit.Name = newName.Trim();
+
+                if (contentToEdit is PageItem page)
+                {
+                    string newBody = await DisplayPromptAsync("Edit Page Body", "Update Body Text:", initialValue: page.Body);
+                    page.Body = newBody?.Trim() ?? string.Empty;
+                }
+                else if (contentToEdit is FileItem file)
+                {
+                    string newPath = await DisplayPromptAsync("Edit File Path", "Update File Path / URL:", initialValue: file.FilePath);
+                    file.FilePath = newPath?.Trim() ?? string.Empty;
+                }
+
+                await DisplayAlert("Updated", $"'{contentToEdit.Name}' was updated successfully.", "OK");
+                RefreshModulesView();
+            }
+        }
+
+        private async void OnDeleteContentItemClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.BindingContext is ContentItem contentToDelete)
+            {
+                bool confirm = await DisplayAlert("Confirm Delete", $"Remove content item '{contentToDelete.Name}'?", "Delete", "Cancel");
+                if (confirm)
+                {
+                    //Finds parent module and removes an item
+                    var parentModule = _selectedCourse.Modules.FirstOrDefault(m => m.Content != null && m.Content.Contains(contentToDelete));
+                    parentModule?.Content.Remove(contentToDelete);
+
+                    await DisplayAlert("Deleted", $"'{contentToDelete.Name}' removed.", "OK");
+                    RefreshModulesView();
+                }
+            }
+        }
+
+        //View content latest button added to verify material in module items
+        private async void OnViewContentItemClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.BindingContext is ContentItem item)
+            {
+                if (item is PageItem page)
+                {
+                    string contentBody = string.IsNullOrWhiteSpace(page.Body) 
+                        ? "[No body text provided for this page]" 
+                        : page.Body;
+
+                    await DisplayAlert($"📄 Page: {page.Name}", contentBody, "Close");
+                }
+                else if (item is FileItem file)
+                {
+                    string pathText = string.IsNullOrWhiteSpace(file.FilePath) 
+                        ? "[No file path or URL provided]" 
+                        : file.FilePath;
+
+                    await DisplayAlert($"📁 File: {file.Name}", $"File Location / URL:\n\n{pathText}", "Close");
+                }
             }
         }
 
