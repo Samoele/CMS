@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Microsoft.Maui.Controls;
 using Library.CMS.Models; 
+using Library.CMS.Services;
 
 namespace App.CMS.Views
 {
@@ -120,7 +121,7 @@ namespace App.CMS.Views
 
         private async void OnSubmitResponseClicked(object sender, EventArgs e)
         {
-            string responseText = StudentResponseEditor.Text?.Trim();
+            string responseText = StudentResponseEditor.Text?.Trim() ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(responseText))
             {
@@ -128,26 +129,67 @@ namespace App.CMS.Views
                 return;
             }
 
-            if (_currentActiveAssignment != null)
+            if (_currentActiveAssignment == null)
             {
-                // Attach response to model or handle submission logic in your backend
-                // _currentActiveAssignment.Submission = responseText;
-
-                await DisplayAlert("Success", $"Response submitted for '{_currentActiveAssignment.Name}'!", "OK");
-                
-                // Reset form
-                SubmissionCard.IsVisible = false;
-                StudentResponseEditor.Text = string.Empty;
-                _currentActiveAssignment = null;
+                await DisplayAlert("Error", "No assignment selected.", "OK");
+                return;
             }
+
+            //get current logged in student from proxy/service
+            var currentStudent = _selectedStudent ?? (SiteServiceProxy.Current?.CurrentUser as Student);
+
+
+            if (currentStudent == null)
+            {
+                await DisplayAlert("Error", "No active student logged in. Please log in first.", "OK");
+                return;
+            }
+
+            _currentActiveAssignment.Submissions ??= new List<Submission>();
+
+            //single submission check: avoids multiple submissions per assignment
+            bool alreadySubmitted = _currentActiveAssignment.Submissions
+                .Any(s => s.StudentId == currentStudent.Id);
+
+            if (alreadySubmitted)
+            {
+                await DisplayAlert("Already Submitted", 
+                    $"You have already submitted a response for '{_currentActiveAssignment.Name}'. You can only submit once.", 
+                    "OK");
+                return;
+            }
+
+            //create and save new Submission with student's actual name and ID
+            int nextId = _currentActiveAssignment.Submissions.Any() 
+                ? _currentActiveAssignment.Submissions.Max(s => s.Id) + 1 : 1;
+
+            var newSubmission = new Submission
+            {
+                Id = nextId,
+                StudentId = currentStudent.Id,
+                StudentName = currentStudent.Name,
+                Content = responseText,
+                SubmissionDate = DateTime.Now
+            };
+
+            _currentActiveAssignment.Submissions.Add(newSubmission);
+
+            await DisplayAlert("Success", $"Response successfully submitted for '{_currentActiveAssignment.Name}'!", "OK");
+
+            //resets form UI
+            SubmissionCard.IsVisible = false;
+            StudentResponseEditor.Text = string.Empty;
+            _currentActiveAssignment = null;
         }
 
-        private void OnCancelSubmissionClicked(object sender, EventArgs e)
+        //cleaner check if already submitted assignment
+               private void OnCancelSubmissionClicked(object sender, EventArgs e)
         {
             SubmissionCard.IsVisible = false;
             StudentResponseEditor.Text = string.Empty;
             _currentActiveAssignment = null;
         }
+
 
 
 
