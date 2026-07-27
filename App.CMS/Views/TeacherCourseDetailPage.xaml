@@ -27,10 +27,34 @@
             <!--Section 1: Roster Management -->
             <VerticalStackLayout x:Name="RosterSection" Spacing="15" IsVisible="True">
                 <Label Text="Course Roster Management" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+    
 
                 <!-- Current Roster List -->
+                <!--Import & Export Buttons -->
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                    <Button Grid.Column="0" 
+                            Text="Import Roster (CSV)" 
+                            BackgroundColor="#059669" 
+                            TextColor="White" 
+                            FontAttributes="Bold"
+                            CornerRadius="8" 
+                            HeightRequest="40" 
+                            Clicked="OnImportRosterClicked" />
+
+                    <Button Grid.Column="1" 
+                            Text="Export Roster (CSV)" 
+                            BackgroundColor="#2563EB" 
+                            TextColor="White" 
+                            FontAttributes="Bold"
+                            CornerRadius="8" 
+                            HeightRequest="40" 
+                            Clicked="OnExportRosterClicked" />
+                </Grid>
+
+                <!-- Currently Enrolled Students List -->
                 <Label Text="Currently Enrolled Students:" FontSize="14" FontAttributes="Bold" TextColor="#475569" />
-                <CollectionView x:Name="RosterCollectionView" SelectionMode="None">
+                
+                <CollectionView x:Name="RosterCollectionView" SelectionMode="None" HeightRequest="300">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <Border StrokeShape="RoundRectangle 8" Padding="12" Margin="0,0,0,8" BackgroundColor="White" Stroke="#E2E8F0">

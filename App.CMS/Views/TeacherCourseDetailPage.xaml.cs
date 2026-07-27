@@ -74,6 +74,7 @@ namespace App.CMS.Views
         {
             SetTabVisibility(roster: true, assignments: false, modules: false);
             HighlightButton(BtnRoster, BtnAssignments, BtnModules);
+            RefreshRosterView();
         }
 
         private void OnAssignmentsTabClicked(object sender, EventArgs e)
@@ -515,6 +516,72 @@ namespace App.CMS.Views
                         $"Assignment '{assignmentToCopy.Name}' was successfully copied to {selectedTargetCourse.Code}!", 
                         "OK");
                 }
+            }
+        }
+
+
+
+        //Export and import logic
+        private async void OnImportRosterClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                var result = await FilePicker.Default.PickAsync(new PickOptions
+                {
+                    PickerTitle = "Select Student Roster CSV File"
+                });
+
+                if (result == null) return;
+
+                using var stream = await result.OpenReadAsync();
+                using var reader = new StreamReader(stream);
+                string csvContent = await reader.ReadToEndAsync();
+
+                //Passes raw text to SiteServiceProxy
+                var importSummary = SiteServiceProxy.Current.ImportRosterFromCsv(_selectedCourse.Id, csvContent);
+
+                RefreshRosterView();
+
+                await DisplayAlert("Import Complete", 
+                    $"Roster import process finished:\n\n" +
+                    $"• Records processed: {importSummary.TotalProcessed}\n" +
+                    $"• New students added: {importSummary.AddedCount}\n" +
+                    $"• Duplicates skipped: {importSummary.DuplicateCount}", 
+                    "OK");
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Import Error", $"Failed to import roster:\n{ex.Message}", "OK");
+            }
+        }
+
+        private async void OnExportRosterClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                //fetch CSV payload directly from Proxy
+                string csvContent = SiteServiceProxy.Current.ExportRosterToCsv(_selectedCourse.Id);
+
+                if (string.IsNullOrEmpty(csvContent))
+                {
+                    await DisplayAlert("Export Warning", "This course currently has no enrolled students to export.", "OK");
+                    return;
+                }
+
+                string fileName = $"{_selectedCourse.Code}_Roster_{DateTime.Now:yyyyMMdd}.csv";
+                string filePath = Path.Combine(FileSystem.Current.AppDataDirectory, fileName);
+
+                await File.WriteAllTextAsync(filePath, csvContent);
+
+                await Share.Default.RequestAsync(new ShareFileRequest
+                {
+                    Title = $"Export Roster for {_selectedCourse.Code}",
+                    File = new ShareFile(filePath)
+                });
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Export Error", $"Failed to export roster:\n{ex.Message}", "OK");
             }
         }
 
