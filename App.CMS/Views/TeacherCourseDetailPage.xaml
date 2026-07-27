@@ -24,7 +24,7 @@
                 <Button x:Name="BtnModules" Grid.Column="2" Text="Modules" BackgroundColor="#475569" TextColor="White" CornerRadius="8" Clicked="OnModulesTabClicked" />
             </Grid>
 
-            <!--SECTION 1: ROSTER MANAGEMENT -->
+            <!--Section 1: Roster Management -->
             <VerticalStackLayout x:Name="RosterSection" Spacing="15" IsVisible="True">
                 <Label Text="Course Roster Management" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
 
@@ -76,10 +76,68 @@
                 </Border>
             </VerticalStackLayout>
 
-            <!--assignments management(placeholder for now) -->
-            <VerticalStackLayout x:Name="AssignmentsSection" Spacing="10" IsVisible="False">
+            <!--Section 2: Assignments management -->
+            <VerticalStackLayout x:Name="AssignmentsSection" Spacing="15" IsVisible="False">
                 <Label Text="Course Assignments Management" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
-                <Label Text="Instructor assignment creation and editing tools will go here." TextColor="#64748B" />
+
+                <!-- create/edit assignment form -->
+                <Border StrokeShape="RoundRectangle 10" Padding="15" BackgroundColor="White" Stroke="#E2E8F0">
+                    <VerticalStackLayout Spacing="12">
+                        <Label x:Name="AssignmentFormHeader" Text="Add New Assignment" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+
+                        <Entry x:Name="AssignmentNameEntry" Placeholder="Assignment Title (e.g. Midterm Exam)" />
+                        <Editor x:Name="AssignmentDescriptionEntry" Placeholder="Description / Instructions..." HeightRequest="80" />
+
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                            <Entry x:Name="TotalPointsEntry" Grid.Column="0" Placeholder="Total Points " Keyboard="Numeric" />
+                            <DatePicker x:Name="DueDateEntry" Grid.Column="1" Format="d" MinimumDate="2026-01-01" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,5,0,0">
+                            <Button x:Name="SaveAssignmentBtn" Grid.Column="0" Text="Save Assignment" BackgroundColor="#16A34A" TextColor="White" CornerRadius="6" Clicked="OnSaveAssignmentClicked" />
+                            <Button x:Name="CancelAssignmentEditBtn" Grid.Column="1" Text="Cancel" BackgroundColor="#64748B" TextColor="White" CornerRadius="6" IsVisible="False" Clicked="OnCancelAssignmentEditClicked" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- existing assignment list -->
+                <Label Text="Current Course Assignments:" FontSize="14" FontAttributes="Bold" TextColor="#475569" Margin="0,10,0,0" />
+                
+                <CollectionView x:Name="AssignmentsCollectionView" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 8" Padding="12" Margin="0,0,0,8" BackgroundColor="White" Stroke="#CBD5E1">
+                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                                    <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="2">
+                                        <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                                        <Label Text="{Binding Description}" FontSize="13" TextColor="#475569" MaxLines="2" LineBreakMode="TailTruncation" />
+                                        <HorizontalStackLayout Spacing="12" Margin="0,4,0,0">
+                                            <Label Text="{Binding TotalPoints, StringFormat='Points: {0}'}" FontSize="12" TextColor="#2563EB" FontAttributes="Bold" />
+                                            <Label Text="{Binding DueDate, StringFormat='Due: {0:MM/dd/yyyy}'}" FontSize="12" TextColor="#DC2626" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+
+                                    <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                                        <Button Text="Edit" 
+                                                BackgroundColor="#2563EB" 
+                                                TextColor="White" 
+                                                CornerRadius="6" 
+                                                HeightRequest="36" 
+                                                Clicked="OnEditAssignmentClicked" 
+                                                CommandParameter="{Binding .}" />
+                                        <Button Text="Delete" 
+                                                BackgroundColor="#EF4444" 
+                                                TextColor="White" 
+                                                CornerRadius="6" 
+                                                HeightRequest="36" 
+                                                Clicked="OnDeleteAssignmentClicked" 
+                                                CommandParameter="{Binding .}" />
+                                    </HorizontalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
             </VerticalStackLayout>
 
             <!--modules management (placeholder for now)-->
