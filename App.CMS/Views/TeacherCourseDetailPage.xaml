@@ -125,6 +125,13 @@
                                                 HeightRequest="36" 
                                                 Clicked="OnViewSubmissionsClicked" 
                                                 CommandParameter="{Binding .}" />
+                                        <Button Text="Copy" 
+                                                BackgroundColor="#7C3AED" 
+                                                TextColor="White" 
+                                                CornerRadius="6" 
+                                                HeightRequest="36" 
+                                                Clicked="OnCopyAssignmentClicked" 
+                                                CommandParameter="{Binding .}" />
                                         <Button Text="Edit" 
                                                 BackgroundColor="#2563EB" 
                                                 TextColor="White" 

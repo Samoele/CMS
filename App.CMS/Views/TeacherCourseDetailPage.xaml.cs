@@ -466,6 +466,59 @@ namespace App.CMS.Views
         }
 
 
+        //Copying assignment from course to another course
+        private async void OnCopyAssignmentClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is Assignment assignmentToCopy)
+            {
+                //get all available courses (future to be changed for course assigned to specific professors)
+                var allCourses = SiteServiceProxy.Current?.GetCourses() ?? new List<Course>();
+                
+                var targetCourses = allCourses
+                    .Where(c => c.Id != _selectedCourse.Id).ToList();
+
+                if (!targetCourses.Any())
+                {
+                    await DisplayAlert("Copy Assignment", "No other courses are available to copy this assignment to.", "OK");
+                    return;
+                }
+
+                //course options for ActionSheet
+                string[] courseOptions = targetCourses
+                    .Select(c => $"{c.Code} - {c.Name}").ToArray();
+
+                string selectedChoice = await DisplayActionSheet(
+                    $"Copy '{assignmentToCopy.Name}' to Course:",
+                    "Cancel",
+                    null,
+                    courseOptions);
+
+                if (selectedChoice == "Cancel" || string.IsNullOrWhiteSpace(selectedChoice)) return;
+
+                // finds target course
+                var selectedTargetCourse = targetCourses.FirstOrDefault(c => $"{c.Code} - {c.Name}" == selectedChoice);
+
+                if (selectedTargetCourse != null)
+                {
+                    selectedTargetCourse.Assignments ??= new List<Assignment>();
+
+                    // clone assignment with Clone assignment model
+                    var clonedAssignment = assignmentToCopy.Clone();
+
+                    //reassign ID so it has unique within the target course's assignments list
+                    clonedAssignment.Id = selectedTargetCourse.Assignments.Any()
+                        ? selectedTargetCourse.Assignments.Max(a => a.Id) + 1 : 1;
+
+                    selectedTargetCourse.Assignments.Add(clonedAssignment);
+
+                    await DisplayAlert("Success", 
+                        $"Assignment '{assignmentToCopy.Name}' was successfully copied to {selectedTargetCourse.Code}!", 
+                        "OK");
+                }
+            }
+        }
+
+
 
 
 
