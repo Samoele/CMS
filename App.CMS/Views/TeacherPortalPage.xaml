@@ -2,26 +2,26 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="App.CMS.Views.TeacherPortalPage"
-             Title="Instructor Portal"
+             Title="Teacher Portal"
              BackgroundColor="#F8FAFC">
 
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="25">
 
             <!-- Dashboard Header -->
-            <Label Text="👨‍🏫 Instructor Dashboard" 
-                   FontSize="26" 
-                   FontAttributes="Bold" 
-                   TextColor="#0F172A" />
+            <Label Text="👨‍🏫 Teacher Dashboard" 
+                FontSize="26" 
+                FontAttributes="Bold" 
+                TextColor="#0F172A" />
 
             <Label Text="Select an option below:"
-                   FontSize="15"
-                   TextColor="#64748B" />
+                FontSize="15"
+                TextColor="#64748B" />
 
-            <!--teacher management options-->
-            <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+            <!-- Teacher Management Options -->
+            <Grid ColumnDefinitions="*, *, *" ColumnSpacing="12">
                 
-                <!--manage courses button -->
+                <!-- Manage Course (open list of available courses to manage) -->
                 <Border Grid.Column="0" 
                         StrokeShape="RoundRectangle 10" 
                         Padding="15" 
@@ -40,8 +40,27 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- manage system directory-->
+                <!-- Create course card -->
                 <Border Grid.Column="1" 
+                        StrokeShape="RoundRectangle 10" 
+                        Padding="15" 
+                        BackgroundColor="White" 
+                        Stroke="#E2E8F0">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="➕ New Course" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />
+                        <Label Text="Add a new course to the system directory, create a unique code to identify the course." FontSize="12" TextColor="#64748B" />
+                        <Button Text="Add Course" 
+                                BackgroundColor="#16A34A" 
+                                TextColor="White" 
+                                CornerRadius="8" 
+                                HeightRequest="40"
+                                Margin="0,5,0,0"
+                                Clicked="OnShowAddCourseFormClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Manage System Roster -->
+                <Border Grid.Column="2" 
                         StrokeShape="RoundRectangle 10" 
                         Padding="15" 
                         BackgroundColor="White" 
@@ -61,7 +80,28 @@
 
             </Grid>
 
-            <!--course list selection-->
+            <!-- Create a new course form -->
+            <Border x:Name="AddCourseFormCard" 
+                    IsVisible="False" 
+                    StrokeShape="RoundRectangle 10" 
+                    Padding="15" 
+                    BackgroundColor="White" 
+                    Stroke="#CBD5E1">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Create New Course" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />
+                    
+                    <Entry x:Name="CourseNameEntry" Placeholder="Course Name (e.g. Database Applications)" />
+                    <Entry x:Name="CourseCodeEntry" Placeholder="Course Code (e.g. COP4710)" />
+                    <Editor x:Name="CourseDescriptionEntry" Placeholder="Course Description..." HeightRequest="70" />
+
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,5,0,0">
+                        <Button Grid.Column="0" Text="Save Course" BackgroundColor="#16A34A" TextColor="White" CornerRadius="8" Clicked="OnSaveNewCourseClicked" />
+                        <Button Grid.Column="1" Text="Cancel" BackgroundColor="#64748B" TextColor="White" CornerRadius="8" Clicked="OnCancelAddCourseClicked" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!--current managed courses List -->
             <VerticalStackLayout x:Name="CoursesSection" Spacing="12" Margin="0,10,0,0" IsVisible="False">
                 <Label Text="Active Managed Courses" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
 
@@ -79,12 +119,21 @@
                                         <Label Text="{Binding Code, StringFormat='Course Code: {0}'}" FontSize="14" TextColor="#64748B" />
                                     </VerticalStackLayout>
                                     
-                                    <Button Grid.Column="1" 
-                                            Text="Manage Course" 
-                                            BackgroundColor="#0F172A" 
-                                            TextColor="White" 
-                                            CornerRadius="8" 
-                                            Clicked="OnManageCourseClicked" />
+                                    <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                                        <Button Text="Manage Course" 
+                                                BackgroundColor="#0F172A" 
+                                                TextColor="White" 
+                                                CornerRadius="8" 
+                                                Clicked="OnManageCourseClicked" 
+                                                CommandParameter="{Binding .}" />
+
+                                        <Button Text="Delete" 
+                                                BackgroundColor="#EF4444" 
+                                                TextColor="White" 
+                                                CornerRadius="8" 
+                                                Clicked="OnDeleteCourseClicked" 
+                                                CommandParameter="{Binding .}" />
+                                    </HorizontalStackLayout>
                                 </Grid>
                             </Border>
                         </DataTemplate>
@@ -92,7 +141,7 @@
                 </CollectionView>
             </VerticalStackLayout>
 
-            <!-- return to main menu -->
+            <!--return to main menu -->
             <Button Text="⬅️ Return to Main Menu"
                     FontSize="16"
                     FontAttributes="Bold"
