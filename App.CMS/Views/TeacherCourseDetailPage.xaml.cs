@@ -234,6 +234,15 @@ namespace App.CMS.Views
             CancelAssignmentEditBtn.IsVisible = false;
         }
 
+        //View submissions by students
+        private async void OnViewSubmissionsClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.BindingContext is Assignment assignment)
+            {
+                await Navigation.PushAsync(new AssignmentSubmissionsPage(assignment));
+            }
+        }
+
 
 
 

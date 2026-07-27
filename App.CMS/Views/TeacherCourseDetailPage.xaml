@@ -118,6 +118,13 @@
                                     </VerticalStackLayout>
 
                                     <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                                        <Button Text="Submissions" 
+                                                BackgroundColor="#059669" 
+                                                TextColor="White" 
+                                                CornerRadius="6" 
+                                                HeightRequest="36" 
+                                                Clicked="OnViewSubmissionsClicked" 
+                                                CommandParameter="{Binding .}" />
                                         <Button Text="Edit" 
                                                 BackgroundColor="#2563EB" 
                                                 TextColor="White" 
