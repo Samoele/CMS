@@ -660,6 +660,104 @@ namespace App.CMS.Views
         }
 
 
+        //Import and Export event handlers for Assignments
+        //Import event handler
+        private async void OnImportAssignmentClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                var customFileType = new FilePickerFileType(
+                    new Dictionary<DevicePlatform, IEnumerable<string>>
+                    {
+                        { DevicePlatform.WinUI, new[] { ".csv", ".txt" } },
+                        { DevicePlatform.MacCatalyst, new[] { "csv", "txt" } },
+                        { DevicePlatform.Android, new[] { "text/csv", "text/plain" } },
+                        { DevicePlatform.iOS, new[] { "public.comma-separated-values-text" } }
+                    });
+
+                var result = await FilePicker.Default.PickAsync(new PickOptions
+                {
+                    PickerTitle = "Select Assignment CSV File",
+                    FileTypes = customFileType
+                });
+
+                if (result == null) return; //cancelled operation
+
+                using var stream = await result.OpenReadAsync();
+                using var reader = new StreamReader(stream);
+                string csvContent = await reader.ReadToEndAsync();
+
+                var importSummary = SiteServiceProxy.Current?.ImportAssignmentCSV(_selectedCourse.Id, csvContent);
+
+                //refresh assignments list
+                RefreshAssignmentsView();
+
+                //import summary report
+                await DisplayAlert("Import Complete", 
+                    $"Assignment import finished:\n\n" +
+                    $"• Processed: {importSummary?.TotalProcessed ?? 0}\n" +
+                    $"• Added: {importSummary?.AddedCount ?? 0}\n" +
+                    $"• Skipped (Duplicates): {importSummary?.DuplicateCount ?? 0}", 
+                    "OK");
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Import Error", $"Failed to import assignment:\n{ex.Message}", "OK");
+            }
+        }
+
+
+        //Export event handler for assignments teacher view
+        private async void OnExportAssignmentClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                if (_selectedCourse?.Assignments == null || !_selectedCourse.Assignments.Any())
+                {
+                    await DisplayAlert("Export Warning", "This course currently has no assignments to export.", "OK");
+                    return;
+                }
+
+                //asks teacher which assignment to export instead of button on list
+                var assignmentNames = _selectedCourse.Assignments.Select(a => a.Name).ToArray();
+                string selectedName = await DisplayActionSheet(
+                    "Select Assignment to Export", 
+                    "Cancel", 
+                    null, 
+                    assignmentNames);
+
+                if (selectedName == "Cancel" || string.IsNullOrEmpty(selectedName)) return;
+
+                var selectedAssignment = _selectedCourse.Assignments.FirstOrDefault(a => a.Name == selectedName);
+                if (selectedAssignment == null) return;
+
+                string csvContent = SiteServiceProxy.Current?.ExportAssignmentCSV(_selectedCourse.Id, selectedAssignment.Id) ?? string.Empty;
+
+                if (string.IsNullOrEmpty(csvContent))
+                {
+                    await DisplayAlert("Export Error", "Could not generate CSV for the selected assignment.", "OK");
+                    return;
+                }
+
+                string fileName = $"{_selectedCourse.Code}_{selectedAssignment.Name.Replace(" ", "_")}.csv";
+                string filePath = Path.Combine(FileSystem.Current.AppDataDirectory, fileName);
+
+                await File.WriteAllTextAsync(filePath, csvContent);
+
+                await Share.Default.RequestAsync(new ShareFileRequest
+                {
+                    Title = $"Export {selectedAssignment.Name}",
+                    File = new ShareFile(filePath)
+                });
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Export Error", $"Failed to export assignment:\n{ex.Message}", "OK");
+            }
+        }
+
+
+
 
 
 

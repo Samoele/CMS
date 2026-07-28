@@ -105,6 +105,27 @@
             <VerticalStackLayout x:Name="AssignmentsSection" Spacing="15" IsVisible="False">
                 <Label Text="Course Assignments Management" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
 
+                <!--Import/export buttons for assignments using same dessign asss roster buttons-->
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                    <Button Grid.Column="0" 
+                            Text="Import Assignment (CSV)" 
+                            BackgroundColor="#059669" 
+                            TextColor="White" 
+                            FontAttributes="Bold"
+                            CornerRadius="8" 
+                            HeightRequest="40" 
+                            Clicked="OnImportAssignmentClicked" />
+
+                    <Button Grid.Column="1" 
+                            Text="Export Assignment (CSV)" 
+                            BackgroundColor="#2563EB" 
+                            TextColor="White" 
+                            FontAttributes="Bold"
+                            CornerRadius="8" 
+                            HeightRequest="40" 
+                            Clicked="OnExportAssignmentClicked" />
+                </Grid>
+
                 <!-- create/edit assignment form -->
                 <Border StrokeShape="RoundRectangle 10" Padding="15" BackgroundColor="White" Stroke="#E2E8F0">
                     <VerticalStackLayout Spacing="12">
