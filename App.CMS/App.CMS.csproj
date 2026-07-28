@@ -1,12 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\CLI.CMS\CLI.CMS.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
-    <!-- Target Windows Desktop -->
+    <!-- SINGLE TARGET FOR FAST WINDOWS DEV BUILD TIMES  -->
     <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
@@ -17,9 +14,15 @@
     <ApplicationTitle>Course Management System</ApplicationTitle>
     <ApplicationId>com.cms.app</ApplicationId>
 
-    <!-- Desktop Execution Flags -->
-    <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
+    <!-- Fast Unpackaged Execution -->
     <WindowsPackageType>None</WindowsPackageType>
+
+    <!-- Fix for referencing CLI executable -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CLI.CMS\CLI.CMS.csproj" />
+  </ItemGroup>
 
 </Project>
