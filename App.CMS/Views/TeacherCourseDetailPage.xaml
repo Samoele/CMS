@@ -16,6 +16,106 @@
                     <Label x:Name="CourseDescriptionLabel" FontSize="14" TextColor="#CBD5E1" Margin="0,5,0,0" />
                 </VerticalStackLayout>
             </Border>
+            <!--COURSE SETTINGS BUTTON(Letter ranges/grade % and future options) -->
+            <Button Grid.Column="1" 
+                    Text="⚙️ Settings" 
+                    BackgroundColor="#334155" 
+                    TextColor="White" 
+                    FontAttributes="Bold"
+                    CornerRadius="8" 
+                    HeightRequest="38" 
+                    Clicked="OnCourseSettingsClicked" />
+            <!-- SETTINGS SECTION: COURSE SETTINGS AND CONFIGURATION/Not visible unless clicked-->
+            <VerticalStackLayout x:Name="SettingsSection" Spacing="15" IsVisible="False">
+                
+                <Label Text="⚙️ Course Settings" FontSize="20" FontAttributes="Bold" TextColor="#0F172A" />
+                <!-- close settings button-->
+                <Button Grid.Column="1"  
+                        Text="✖ Close Settings" 
+                        BackgroundColor="#EF4444" 
+                        TextColor="White" 
+                        FontAttributes="Bold" 
+                        CornerRadius="6" 
+                        HeightRequest="36" 
+                        Clicked="OnCloseSettingsClicked" />
+
+                <!--Option1: Letter grade scale-->
+                <Border BackgroundColor="#F8FAFC" Stroke="#CBD5E1" StrokeShape="RoundRectangle 10" Padding="15">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Letter Grade Ranges" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                        <Label Text="Set the minimum percentage required for each letter grade (e.g A = 90)" FontSize="12" TextColor="#64748B" />
+
+                        <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto, Auto" RowSpacing="8" ColumnSpacing="10">
+                            <Label Grid.Row="0" Grid.Column="0" Text="Minimum % for A:" VerticalOptions="Center" FontAttributes="Bold" />
+                            <Entry Grid.Row="0" Grid.Column="1" x:Name="EntryGradeA" Keyboard="Numeric" Placeholder="90" BackgroundColor="White" />
+
+                            <Label Grid.Row="1" Grid.Column="0" Text="Minimum % for B:" VerticalOptions="Center" FontAttributes="Bold" />
+                            <Entry Grid.Row="1" Grid.Column="1" x:Name="EntryGradeB" Keyboard="Numeric" Placeholder="80" BackgroundColor="White" />
+
+                            <Label Grid.Row="2" Grid.Column="0" Text="Minimum % for C:" VerticalOptions="Center" FontAttributes="Bold" />
+                            <Entry Grid.Row="2" Grid.Column="1" x:Name="EntryGradeC" Keyboard="Numeric" Placeholder="70" BackgroundColor="White" />
+
+                            <Label Grid.Row="3" Grid.Column="0" Text="Minimum % for D:" VerticalOptions="Center" FontAttributes="Bold" />
+                            <Entry Grid.Row="3" Grid.Column="1" x:Name="EntryGradeD" Keyboard="Numeric" Placeholder="60" BackgroundColor="White" />
+                        </Grid>
+
+                        <Button Text="Save Grade Ranges" 
+                                BackgroundColor="#0D9488" 
+                                TextColor="White" 
+                                FontAttributes="Bold" 
+                                CornerRadius="6" 
+                                HeightRequest="40" 
+                                Clicked="OnSaveGradeScaleClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!--Option Card 2: Set assignment weights -->
+                <Border BackgroundColor="#F8FAFC" Stroke="#CBD5E1" StrokeShape="RoundRectangle 10" Padding="15">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Assignment Weight Percentage" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                        <Label Text="Configure the weighted percentage contribution for each course assignment." FontSize="12" TextColor="#64748B" />
+
+                        <CollectionView x:Name="WeightsCollectionView" SelectionMode="None">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="*, 120" ColumnSpacing="10" Margin="0,0,0,8">
+                                        <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center" FontAttributes="Bold" TextColor="#334155" />
+                                        <Entry Grid.Column="1" Text="{Binding Weight, Mode=TwoWay}" Keyboard="Numeric" Placeholder="Weight %" BackgroundColor="White" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+
+                        <Button Text="Save Assignment Weight Percentages" 
+                                BackgroundColor="#6366F1" 
+                                TextColor="White" 
+                                FontAttributes="Bold" 
+                                CornerRadius="6" 
+                                HeightRequest="40" 
+                                Clicked="OnSaveWeightsClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!--Option Card 3: Course Details(Course editing)-->
+                <Border BackgroundColor="#F8FAFC" Stroke="#CBD5E1" StrokeShape="RoundRectangle 10" Padding="15">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Basic Course Info" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                        
+                        <Entry x:Name="EditCourseNameEntry" Placeholder="Course Title" BackgroundColor="White" />
+                        <Entry x:Name="EditCourseCodeEntry" Placeholder="Course Code (e.g., COP4710)" BackgroundColor="White" />
+                        <Editor x:Name="EditCourseDescEntry" Placeholder="Course Description" HeightRequest="70" BackgroundColor="White" />
+
+                        <Button Text="Save Course Information" 
+                                BackgroundColor="#2563EB" 
+                                TextColor="White" 
+                                FontAttributes="Bold" 
+                                CornerRadius="6" 
+                                HeightRequest="40" 
+                                Clicked="OnSaveCourseInfoClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
 
             <!--navigation tabs -->
             <Grid ColumnDefinitions="*, *, *, * " ColumnSpacing="10">
@@ -105,7 +205,7 @@
             <VerticalStackLayout x:Name="AssignmentsSection" Spacing="15" IsVisible="False">
                 <Label Text="Course Assignments Management" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
 
-                <!--Import/export buttons for assignments using same dessign asss roster buttons-->
+                <!--Import/export buttons for assignments using same dessign as roster buttons-->
                 <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
                     <Button Grid.Column="0" 
                             Text="Import Assignment (CSV)" 

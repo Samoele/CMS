@@ -103,7 +103,10 @@ namespace App.CMS.Views
 
         private void HighlightButton(Button active, params Button[] inactives) //fix for 4th button without breaking methods
         {
-            active.BackgroundColor = Color.FromArgb("#2563EB");
+            if (active != null) //NULL CHECK//FIXES settings button error
+            {
+                active.BackgroundColor = Color.FromArgb("#2563EB");
+            }
 
             foreach (var btn in inactives)
             {
@@ -754,6 +757,118 @@ namespace App.CMS.Views
             {
                 await DisplayAlert("Export Error", $"Failed to export assignment:\n{ex.Message}", "OK");
             }
+        }
+
+        //Course Settings button event handlers for grade ranges, weighted percentages and course editing
+        private async void OnCourseSettingsClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                // hide every other sections
+                RosterSection.IsVisible = false;
+                AssignmentsSection.IsVisible = false;
+                ModulesSection.IsVisible = false;
+                AnnouncementsSection.IsVisible = false;
+
+                HighlightButton(null, BtnRoster, BtnAssignments, BtnModules, BtnAnnouncements);
+
+                SettingsSection.IsVisible = true;
+
+                PopulateSettingsData();
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Settings Error", $"Error opening settings:\n{ex.Message}\n\n{ex.StackTrace}", "OK");
+            }
+        }
+
+        private void OnCloseSettingsClicked(object sender, EventArgs e)
+        {
+            // Hide settings
+            SettingsSection.IsVisible = false;
+
+            // Return to default section roster//can be changed later
+            RosterSection.IsVisible = true;
+            HighlightButton(BtnRoster, BtnAssignments, BtnModules, BtnAnnouncements);
+        }
+
+        private void PopulateSettingsData()
+        {
+            if (_selectedCourse == null) return;
+
+            //Loads grade scale
+            EntryGradeA.Text = _selectedCourse.GradeScaleA.ToString();
+            EntryGradeB.Text = _selectedCourse.GradeScaleB.ToString();
+            EntryGradeC.Text = _selectedCourse.GradeScaleC.ToString();
+            EntryGradeD.Text = _selectedCourse.GradeScaleD.ToString();
+
+            //Loads assignment weights
+            WeightsCollectionView.ItemsSource = null;
+            WeightsCollectionView.ItemsSource = _selectedCourse.Assignments;
+
+            //Loads basic course info (name, code, description)
+            EditCourseNameEntry.Text = _selectedCourse.Name;
+            EditCourseCodeEntry.Text = _selectedCourse.Code;
+            EditCourseDescEntry.Text = _selectedCourse.Description;
+        }
+            
+        //event handler for saving grade scale
+        private async void OnSaveGradeScaleClicked(object sender, EventArgs e)
+        {
+            if (double.TryParse(EntryGradeA.Text, out double a) &&
+                double.TryParse(EntryGradeB.Text, out double b) &&
+                double.TryParse(EntryGradeC.Text, out double c) &&
+                double.TryParse(EntryGradeD.Text, out double d))
+            {
+                _selectedCourse.GradeScaleA = a;
+                _selectedCourse.GradeScaleB = b;
+                _selectedCourse.GradeScaleC = c;
+                _selectedCourse.GradeScaleD = d;
+
+                await DisplayAlert("Success", "Grade thresholds updated!", "OK");
+            }
+            else
+            {
+                await DisplayAlert("Validation Error", "Please enter valid numeric percentage values.", "OK");
+            }
+        }
+
+        private async void OnSaveWeightsClicked(object sender, EventArgs e)
+        {
+            await DisplayAlert("Success", "Assignment weights updated!", "OK");
+        }
+
+        private async void OnSaveCourseInfoClicked(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(EditCourseNameEntry.Text) || string.IsNullOrWhiteSpace(EditCourseCodeEntry.Text))
+            {
+                await DisplayAlert("Validation Error", "Course title and code cannot be empty.", "OK");
+                return;
+            }
+
+            _selectedCourse.Name = EditCourseNameEntry.Text.Trim();
+            _selectedCourse.Code = EditCourseCodeEntry.Text.Trim();
+            _selectedCourse.Description = EditCourseDescEntry.Text?.Trim();
+
+            CourseNameLabel.Text = _selectedCourse.Name;
+            CourseCodeLabel.Text = $"Course Code: {_selectedCourse.Code}";
+
+            await DisplayAlert("Success", "Course information updated successfully!", "OK");
+
+            //update with SSProxy so teacher dashboard gets updated info
+            var courses = SiteServiceProxy.Current?.GetCourses();
+            var courseInService = courses?.FirstOrDefault(c => c.Id == _selectedCourse.Id);
+            if (courseInService != null)
+            {
+                courseInService.Name = _selectedCourse.Name;
+                courseInService.Code = _selectedCourse.Code;
+                courseInService.Description = _selectedCourse.Description;
+            }
+
+            // Update local page labels //does not update and must check to fix
+            CourseNameLabel.Text = _selectedCourse.Name;
+            CourseCodeLabel.Text = $"Course Code: {_selectedCourse.Code}";
+
         }
 
 
