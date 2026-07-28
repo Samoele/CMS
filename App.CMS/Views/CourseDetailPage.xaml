@@ -57,6 +57,53 @@
                 </Grid>
             </Border>
 
+            <!-- Announcements section at the top-->
+            <Border x:Name="StudentAnnouncementsCard" 
+                    IsVisible="False" 
+                    BackgroundColor="#EFF6FF" 
+                    Stroke="#93C5FD" 
+                    StrokeShape="RoundRectangle 10" 
+                    Padding="15" 
+                    Margin="0,0,0,10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="📢 Course Announcements" 
+                        FontSize="16" 
+                        FontAttributes="Bold" 
+                        TextColor="#1E40AF" />
+
+                    <CollectionView x:Name="StudentAnnouncementsCollectionView" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border StrokeShape="RoundRectangle 6" 
+                                        Padding="12" 
+                                        Margin="0,0,0,8" 
+                                        BackgroundColor="White" 
+                                        Stroke="#BFDBFE">
+                                    <VerticalStackLayout Spacing="4">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <Label Grid.Column="0" 
+                                                Text="{Binding Title}" 
+                                                FontSize="15" 
+                                                FontAttributes="Bold" 
+                                                TextColor="#1E3A8A" />
+                                            
+                                            <Label Grid.Column="1" 
+                                                Text="{Binding DatePosted, StringFormat='{0:MMM dd}'}" 
+                                                FontSize="12" 
+                                                TextColor="#6B7280" />
+                                        </Grid>
+                                        
+                                        <Label Text="{Binding Content}" 
+                                            FontSize="13" 
+                                            TextColor="#374151" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
             <!-- Interaction Sections -->
             <Grid ColumnDefinitions="*, *, *" ColumnSpacing="10">
                 <Button x:Name="BtnAssignments" Grid.Column="0" Text="Assignments" BackgroundColor="#2563EB" TextColor="White" CornerRadius="8" Clicked="OnAssignmentsTabClicked" />

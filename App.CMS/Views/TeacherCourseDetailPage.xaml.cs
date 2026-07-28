@@ -73,7 +73,7 @@ namespace App.CMS.Views
         private void OnRosterTabClicked(object sender, EventArgs e)
         {
             SetTabVisibility(roster: true, assignments: false, modules: false);
-            HighlightButton(BtnRoster, BtnAssignments, BtnModules);
+            HighlightButton(BtnRoster, BtnAssignments, BtnModules, BtnAnnouncements);
             RefreshRosterView();
         }
 
@@ -101,11 +101,17 @@ namespace App.CMS.Views
             ModulesSection.IsVisible = modules;
         }
 
-        private void HighlightButton(Button active, Button inactive1, Button inactive2)
+        private void HighlightButton(Button active, params Button[] inactives) //fix for 4th button without breaking methods
         {
-            active.BackgroundColor = Color.FromArgb("#0F172A");
-            inactive1.BackgroundColor = Color.FromArgb("#475569");
-            inactive2.BackgroundColor = Color.FromArgb("#475569");
+            active.BackgroundColor = Color.FromArgb("#2563EB");
+
+            foreach (var btn in inactives)
+            {
+                if (btn != null)
+                {
+                    btn.BackgroundColor = Color.FromArgb("#475569");
+                }
+            }
         }
 
         private async void OnBackClicked(object sender, EventArgs e)
@@ -583,6 +589,74 @@ namespace App.CMS.Views
             {
                 await DisplayAlert("Export Error", $"Failed to export roster:\n{ex.Message}", "OK");
             }
+        }
+
+        //announcements section methods
+
+        private void OnAnnouncementsTabClicked(object sender, EventArgs e)
+        {
+            // Hide other sections, show AnnouncementsSection
+            RosterSection.IsVisible = false;
+            AssignmentsSection.IsVisible = false;
+            ModulesSection.IsVisible = false;
+            AnnouncementsSection.IsVisible = true;
+
+            HighlightButton(BtnAnnouncements, BtnRoster, BtnAssignments, BtnModules);
+            RefreshAnnouncementsView();
+        }
+
+
+        private void RefreshAnnouncementsView()
+        {
+            _selectedCourse.Announcements ??= new List<Announcement>();
+
+            AnnouncementsCollectionView.ItemsSource = null;
+            AnnouncementsCollectionView.ItemsSource = _selectedCourse.Announcements
+                .OrderByDescending(a => a.DatePosted)
+                .ToList();
+        }
+
+        private async void OnPostAnnouncementClicked(object sender, EventArgs e)
+        {
+            string title = AnnouncementTitleEntry.Text?.Trim() ?? string.Empty;
+            string content = AnnouncementContentEntry.Text?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(content))
+            {
+                await DisplayAlert("Validation Error", "Please provide both a title and content.", "OK");
+                return;
+            }
+
+            _selectedCourse.Announcements ??= new List<Announcement>();
+
+            int nextId = _selectedCourse.Announcements.Any() 
+                ? _selectedCourse.Announcements.Max(a => a.Id) + 1 : 1;
+
+            _selectedCourse.Announcements.Add(new Announcement
+            {
+                Id = nextId,
+                Title = title,
+                Content = content,
+                DatePosted = DateTime.Now
+                
+            });
+                
+
+            //Update central proxy state so all pages see the change!
+            var currentCourses = SiteServiceProxy.Current?.GetCourses();
+            var existingCourse = currentCourses?.FirstOrDefault(c => c.Id == _selectedCourse.Id);
+            if (existingCourse != null)
+            {
+                existingCourse.Announcements = _selectedCourse.Announcements;
+            }
+
+    
+
+            AnnouncementTitleEntry.Text = string.Empty;
+            AnnouncementContentEntry.Text = string.Empty;
+
+            RefreshAnnouncementsView();
+            await DisplayAlert("Success", "Announcement posted!", "OK");
         }
 
 

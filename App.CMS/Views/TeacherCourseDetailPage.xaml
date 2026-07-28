@@ -18,10 +18,11 @@
             </Border>
 
             <!--navigation tabs -->
-            <Grid ColumnDefinitions="*, *, *" ColumnSpacing="10">
+            <Grid ColumnDefinitions="*, *, *, * " ColumnSpacing="10">
                 <Button x:Name="BtnRoster" Grid.Column="0" Text="Roster" BackgroundColor="#0F172A" TextColor="White" CornerRadius="8" Clicked="OnRosterTabClicked" />
                 <Button x:Name="BtnAssignments" Grid.Column="1" Text="Assignments" BackgroundColor="#475569" TextColor="White" CornerRadius="8" Clicked="OnAssignmentsTabClicked" />
                 <Button x:Name="BtnModules" Grid.Column="2" Text="Modules" BackgroundColor="#475569" TextColor="White" CornerRadius="8" Clicked="OnModulesTabClicked" />
+                <Button x:Name="BtnAnnouncements" Grid.Column="3" Text="Announcements" BackgroundColor="#475569" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="42" Clicked="OnAnnouncementsTabClicked" />
             </Grid>
 
             <!--Section 1: Roster Management -->
@@ -259,6 +260,83 @@
                                         </VerticalStackLayout>
                                     </Border>
 
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!--Section 4: Announcements -->
+            <VerticalStackLayout x:Name="AnnouncementsSection" Spacing="15" IsVisible="False">
+                
+                <Label Text="Course Announcements" 
+                    FontSize="18" 
+                    FontAttributes="Bold" 
+                    TextColor="#1E293B" />
+
+                <!--Post new announcement form -->
+                <Border StrokeShape="RoundRectangle 10" 
+                        Padding="15" 
+                        BackgroundColor="#F8FAFC" 
+                        Stroke="#CBD5E1">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="📢 Post New Announcement" 
+                            FontSize="16" 
+                            FontAttributes="Bold" 
+                            TextColor="#0F172A" />
+                        
+                        <Entry x:Name="AnnouncementTitleEntry" 
+                            Placeholder="Announcement Title" 
+                            BackgroundColor="White" />
+
+                        <Editor x:Name="AnnouncementContentEntry" 
+                                Placeholder="Write announcement details here..." 
+                                HeightRequest="90" 
+                                BackgroundColor="White" />
+
+                        <Button Text="Post Announcement" 
+                                BackgroundColor="#2563EB" 
+                                TextColor="White" 
+                                FontAttributes="Bold"
+                                CornerRadius="8" 
+                                HeightRequest="42"
+                                Clicked="OnPostAnnouncementClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!--Posted announcements list -->
+                <Label Text="Posted Announcements:" 
+                    FontSize="14" 
+                    FontAttributes="Bold" 
+                    TextColor="#475569" 
+                    Margin="0,5,0,0" />
+
+                <CollectionView x:Name="AnnouncementsCollectionView" SelectionMode="None" HeightRequest="300">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 8" 
+                                    Padding="15" 
+                                    Margin="0,0,0,10" 
+                                    BackgroundColor="White" 
+                                    Stroke="#E2E8F0">
+                                <VerticalStackLayout Spacing="6">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <Label Grid.Column="0" 
+                                            Text="{Binding Title}" 
+                                            FontSize="16" 
+                                            FontAttributes="Bold" 
+                                            TextColor="#0F172A" />
+                                        
+                                        <Label Grid.Column="1" 
+                                            Text="{Binding DatePosted, StringFormat='{0:MMM dd, yyyy h:mm tt}'}" 
+                                            FontSize="12" 
+                                            TextColor="#64748B" />
+                                    </Grid>
+                                    
+                                    <Label Text="{Binding Content}" 
+                                        FontSize="14" 
+                                        TextColor="#334155" />
                                 </VerticalStackLayout>
                             </Border>
                         </DataTemplate>

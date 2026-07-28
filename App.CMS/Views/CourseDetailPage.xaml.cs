@@ -20,6 +20,24 @@ namespace App.CMS.Views
             PopulateCourseDetails();
         }
 
+        //method for updated announcements
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+
+            //Fetch the latest version of the course from the  SiteserviceProxy
+            var updatedCourse = SiteServiceProxy.Current?.GetCourses().FirstOrDefault(c => c.Id == _selectedCourse.Id);
+
+            if (updatedCourse != null)
+            {
+                //synchronize announcements list
+                _selectedCourse.Announcements = updatedCourse.Announcements;
+            }
+
+            
+            PopulateCourseDetails();
+        }
+
         private void PopulateCourseDetails()
         {
             //header info
@@ -33,6 +51,16 @@ namespace App.CMS.Views
 
             //top right grade calculation display
             CalculateAndDisplayGrade();
+
+            //binds and refreshes Announcements //changed for announcements to update
+            var sortedAnnouncements = (_selectedCourse.Announcements ?? new List<Announcement>())
+                .OrderByDescending(a => a.DatePosted).ToList();
+
+            StudentAnnouncementsCollectionView.ItemsSource = null;
+            StudentAnnouncementsCollectionView.ItemsSource = sortedAnnouncements;
+
+            // Show card only if an announcement exist
+            StudentAnnouncementsCard.IsVisible = sortedAnnouncements.Any();
 
 
         }
@@ -95,11 +123,20 @@ namespace App.CMS.Views
             GradesSection.IsVisible = grades;
         }
 
-        private void HighlightButton(Button active, Button inactive1, Button inactive2)
+        //need to check later as I have duplicate methods (hella inneficient and looks unprofessional to be honest)
+        //same method as in Teacherview, will ignore for now and make better structure later
+        //
+         private void HighlightButton(Button active, params Button[] inactives) 
         {
             active.BackgroundColor = Color.FromArgb("#2563EB");
-            inactive1.BackgroundColor = Color.FromArgb("#475569");
-            inactive2.BackgroundColor = Color.FromArgb("#475569");
+
+            foreach (var btn in inactives)
+            {
+                if (btn != null)
+                {
+                    btn.BackgroundColor = Color.FromArgb("#475569");
+                }
+            }
         }
 
         private async void OnBackClicked(object sender, EventArgs e)
