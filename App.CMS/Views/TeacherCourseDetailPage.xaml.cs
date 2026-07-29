@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.Maui.Controls;
 using Library.CMS.Models;
 using Library.CMS.Services;
@@ -72,14 +73,14 @@ namespace App.CMS.Views
         //tab switching handlers
         private void OnRosterTabClicked(object sender, EventArgs e)
         {
-            SetTabVisibility(roster: true, assignments: false, modules: false);
+            SetTabVisibility(roster: true, assignments: false, modules: false, announcements: false, gradebook: false);
             HighlightButton(BtnRoster, BtnAssignments, BtnModules, BtnAnnouncements);
             RefreshRosterView();
         }
 
         private void OnAssignmentsTabClicked(object sender, EventArgs e)
         {
-            SetTabVisibility(roster: false, assignments: true, modules: false);
+            SetTabVisibility(roster: false, assignments: true, modules: false, announcements: false, gradebook: false);
             HighlightButton(BtnAssignments, BtnRoster, BtnModules);
 
             //Refresh assignments list when switching tab
@@ -88,17 +89,24 @@ namespace App.CMS.Views
 
         private void OnModulesTabClicked(object sender, EventArgs e)
         {
-            SetTabVisibility(roster: false, assignments: false, modules: true);
+            SetTabVisibility(roster: false, assignments: false, modules: true, announcements: false, gradebook: false);
             HighlightButton(BtnModules, BtnRoster, BtnAssignments);
 
             RefreshModulesView();
         }
 
-        private void SetTabVisibility(bool roster, bool assignments, bool modules)
+        private void SetTabVisibility(bool roster, bool assignments, bool modules, bool announcements, bool gradebook)
         {
             RosterSection.IsVisible = roster;
             AssignmentsSection.IsVisible = assignments;
             ModulesSection.IsVisible = modules;
+            AnnouncementsSection.IsVisible = announcements;
+            GradebookSection.IsVisible = gradebook;
+
+            if (SettingsSection != null)
+            {
+                SettingsSection.IsVisible = false;
+            }
         }
 
         private void HighlightButton(Button active, params Button[] inactives) //fix for 4th button without breaking methods
@@ -870,6 +878,169 @@ namespace App.CMS.Views
             CourseCodeLabel.Text = $"Course Code: {_selectedCourse.Code}";
 
         }
+
+        //export event handlers for gradebook
+        private void OnGradebookTabClicked(object sender, EventArgs e)
+        {
+            SetTabVisibility(roster: false, assignments: false, modules: false, announcements: false, gradebook: true);
+            HighlightButton(BtnGradebook, BtnRoster, BtnAssignments, BtnModules, BtnAnnouncements);
+            RefreshGradebookView();
+        }
+
+        //GeminiAI Implementation //Help with dynamic table so all enrolled students and assignments are registered
+        private void RefreshGradebookView()
+        {
+            GradebookGrid.Children.Clear();
+            GradebookGrid.RowDefinitions.Clear();
+            GradebookGrid.ColumnDefinitions.Clear();
+
+            var students = _selectedCourse.Roster ?? new List<Student>();
+            var assignments = _selectedCourse.Assignments ?? new List<Assignment>();
+
+            if (!students.Any())
+            {
+                GradebookGrid.Children.Add(new Label { Text = "No enrolled students found in roster.", TextColor = Color.FromArgb("#64748B") });
+                return;
+            }
+
+            // Grid Columns: Student name/ assignments/ overall grade
+            GradebookGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Student Column
+            foreach (var a in assignments)
+            {
+                GradebookGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            }
+            GradebookGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Grade display Column
+
+            // build Header Row 
+            GradebookGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            
+            var headerName = new Label { Text = "Student Name", FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#0F172A") };
+            Grid.SetRow(headerName, 0);
+            Grid.SetColumn(headerName, 0);
+            GradebookGrid.Children.Add(headerName);
+
+            int colIndex = 1;
+            foreach (var assignment in assignments)
+            {
+                var headerAssg = new Label { Text = assignment.Name, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#2563EB") };
+                Grid.SetRow(headerAssg, 0);
+                Grid.SetColumn(headerAssg, colIndex++);
+                GradebookGrid.Children.Add(headerAssg);
+            }
+
+            var headerOverall = new Label { Text = "Overall Grade", FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#059669") };
+            Grid.SetRow(headerOverall, 0);
+            Grid.SetColumn(headerOverall, colIndex);
+            GradebookGrid.Children.Add(headerOverall);
+
+            // Build Student Rows
+            int rowIndex = 1;
+            foreach (var student in students)
+            {
+                GradebookGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+                // Student Name Label
+                var lblName = new Label { Text = student.Name, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#334155"), VerticalOptions = LayoutOptions.Center };
+                Grid.SetRow(lblName, rowIndex);
+                Grid.SetColumn(lblName, 0);
+                GradebookGrid.Children.Add(lblName);
+
+                int studentColIndex = 1;
+                double totalEarned = 0;
+                double totalPossible = 0;
+
+                foreach (var assignment in assignments)
+                {
+                    // Retrieve score or NA if graded or not
+                    // Fetches grade and assignment to insert on table
+                    double score = SiteServiceProxy.Current?.GetStudentScore(_selectedCourse.Id, student.Id, assignment.Id) ?? 0.0;
+                    double maxPoints = assignment.TotalPoints > 0 ? assignment.TotalPoints : 100;
+
+                    totalEarned += score;
+                    totalPossible += maxPoints;
+
+                    var lblScore = new Label { Text = $"{score}/{maxPoints}", TextColor = Color.FromArgb("#475569"), VerticalOptions = LayoutOptions.Center };
+                    Grid.SetRow(lblScore, rowIndex);
+                    Grid.SetColumn(lblScore, studentColIndex++);
+                    GradebookGrid.Children.Add(lblScore);
+                }
+
+                //calculates overall grade
+                double overallPct = totalPossible > 0 ? (totalEarned / totalPossible) * 100.0 : 0.0;
+                var lblOverall = new Label { Text = $"{overallPct:F1}%", FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#0D9488"), VerticalOptions = LayoutOptions.Center };
+                Grid.SetRow(lblOverall, rowIndex);
+                Grid.SetColumn(lblOverall, studentColIndex);
+                GradebookGrid.Children.Add(lblOverall);
+
+                rowIndex++;
+            }
+        }
+
+        //exports gradebook to CSV
+        private async void OnExportGradebookClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                var students = _selectedCourse.Roster ?? new List<Student>();
+                var assignments = _selectedCourse.Assignments ?? new List<Assignment>();
+
+                if (!students.Any())
+                {
+                    await DisplayAlert("Export Warning", "There are no students in the roster to export.", "OK");
+                    return;
+                }
+
+                var csvBuilder = new StringBuilder();
+
+                //CSV Header Row: Student Name, Assignment 1, Assignment 2, ..., Overall Grade
+                var headerColumns = new List<string> { "Student Name" };
+                headerColumns.AddRange(assignments.Select(a => $"\"{a.Name}\""));
+                headerColumns.Add("Overall Grade (%)");
+                csvBuilder.AppendLine(string.Join(",", headerColumns));
+
+                //Student Data Rows
+                foreach (var student in students)
+                {
+                    var rowValues = new List<string> { $"\"{student.Name}\"" };
+                    double totalEarned = 0;
+                    double totalPossible = 0;
+
+                    foreach (var assignment in assignments)
+                    {
+                        double score = SiteServiceProxy.Current?.GetStudentScore(_selectedCourse.Id, student.Id, assignment.Id) ?? 0.0;
+                        double maxPoints = assignment.TotalPoints > 0 ? assignment.TotalPoints : 100;
+
+                        totalEarned += score;
+                        totalPossible += maxPoints;
+
+                        rowValues.Add(score.ToString());
+                    }
+
+                    double overallPct = totalPossible > 0 ? totalEarned / totalPossible * 100.0 : 0.0;
+                    rowValues.Add($"{overallPct:F1}");
+
+                    csvBuilder.AppendLine(string.Join(",", rowValues));
+                }
+
+                //saves and shares file
+                string fileName = $"{_selectedCourse.Code}_Gradebook.csv";
+                string filePath = Path.Combine(FileSystem.Current.AppDataDirectory, fileName);
+
+                await File.WriteAllTextAsync(filePath, csvBuilder.ToString());
+
+                await Share.Default.RequestAsync(new ShareFileRequest
+                {
+                    Title = $"Export {_selectedCourse.Code} Gradebook",
+                    File = new ShareFile(filePath)
+                });
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Export Error", $"Failed to export gradebook:\n{ex.Message}", "OK");
+            }
+        }
+
+        
 
 
 
