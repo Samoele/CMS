@@ -118,11 +118,12 @@
             </VerticalStackLayout>
 
             <!--navigation tabs -->
-            <Grid ColumnDefinitions="*, *, *, * " ColumnSpacing="10">
+            <Grid ColumnDefinitions=" *, *, *, *, * " ColumnSpacing="10">
                 <Button x:Name="BtnRoster" Grid.Column="0" Text="Roster" BackgroundColor="#0F172A" TextColor="White" CornerRadius="8" Clicked="OnRosterTabClicked" />
                 <Button x:Name="BtnAssignments" Grid.Column="1" Text="Assignments" BackgroundColor="#475569" TextColor="White" CornerRadius="8" Clicked="OnAssignmentsTabClicked" />
                 <Button x:Name="BtnModules" Grid.Column="2" Text="Modules" BackgroundColor="#475569" TextColor="White" CornerRadius="8" Clicked="OnModulesTabClicked" />
-                <Button x:Name="BtnAnnouncements" Grid.Column="3" Text="Announcements" BackgroundColor="#475569" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="42" Clicked="OnAnnouncementsTabClicked" />
+                <Button x:Name="BtnAnnouncements" Grid.Column="3" Text="Announcements" BackgroundColor="#475569" TextColor="White" CornerRadius="8" HeightRequest="42" Clicked="OnAnnouncementsTabClicked" />
+                <Button x:Name="BtnGradebook" Grid.Column="4" Text="Gradebook" Clicked="OnGradebookTabClicked" BackgroundColor="#475569" TextColor="White" CornerRadius="8" HeightRequest="40" />
             </Grid>
 
             <!--Section 1: Roster Management -->
@@ -131,7 +132,7 @@
     
 
                 <!-- Current Roster List -->
-                <!--Import & Export Buttons -->
+                <!--import and export Buttons -->
                 <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
                     <Button Grid.Column="0" 
                             Text="Import Roster (CSV)" 
@@ -463,6 +464,31 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
+            </VerticalStackLayout>
+            <!--Section 5: GRADEBOOK-->
+            <VerticalStackLayout x:Name="GradebookSection" Spacing="15" IsVisible="False">
+                
+                <Grid ColumnDefinitions="*, Auto">
+                    <Label Grid.Column="0" Text="Course Gradebook" FontSize="20" FontAttributes="Bold" TextColor="#0F172A" VerticalOptions="Center" />
+                    
+                    <!-- Export Gradebook Button -->
+                    <Button Grid.Column="4" 
+                            Text="Export Gradebook (CSV)" 
+                            BackgroundColor="#059669" 
+                            TextColor="White" 
+                            FontAttributes="Bold" 
+                            CornerRadius="8" 
+                            HeightRequest="40" 
+                            Clicked="OnExportGradebookClicked" />
+                </Grid>
+
+                <Border BackgroundColor="White" Stroke="#CBD5E1" StrokeShape="RoundRectangle 8" Padding="10">
+                    <ScrollView Orientation="Both" HeightRequest="400">
+                        <!-- Dynamic Grid in TCDP.xaml.cs-->
+                        <Grid x:Name="GradebookGrid" RowSpacing="8" ColumnSpacing="15" Padding="5" />
+                    </ScrollView>
+                </Border>
+
             </VerticalStackLayout>
 
             <!-- Go Back Button -->
