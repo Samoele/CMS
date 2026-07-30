@@ -22,6 +22,7 @@ namespace App.CMS.Views
             _selectedStudent = student;
 
             PopulateCourseDetails();
+            RefreshStudentGradeSummary();
         }
 
         //method for updated announcements
@@ -53,8 +54,6 @@ namespace App.CMS.Views
             AssignmentsListView.ItemsSource = _selectedCourse.Assignments;
             ModulesListView.ItemsSource = _selectedCourse.Modules;
 
-            //top right grade calculation display
-            CalculateAndDisplayGrade();
 
             //binds and refreshes Announcements //changed for announcements to update
             var sortedAnnouncements = (_selectedCourse.Announcements ?? new List<Announcement>())
@@ -69,37 +68,6 @@ namespace App.CMS.Views
 
         }
 
-        //grade calculation based on percentage
-        private void CalculateAndDisplayGrade() //temporary grade calculation
-        {
-            // Example grade evaluation logic
-            double totalEarnedPoints = 94.5; // Calculated from student submissions
-            double totalPossiblePoints = 100.0;
-            double percentage = totalPossiblePoints > 0 ? (totalEarnedPoints / totalPossiblePoints) * 100 : 100.0;
-
-            string letterGrade = GetLetterGrade(percentage);
-
-            // Updates right header display
-            LetterGradeLabel.Text = letterGrade;
-            NumericGradeLabel.Text = $"{percentage:F1}%";
-
-            // Update Tab Text
-            DetailedGradeSummaryLabel.Text = $"{_selectedStudent.Name} currently holds an overall grade of {percentage:F1}% ({letterGrade}) in {_selectedCourse.Code}.";
-        }
-
-        private string GetLetterGrade(double percentage)
-        {
-            if (percentage >= 93) return "A";
-            if (percentage >= 90) return "A-";
-            if (percentage >= 87) return "B+";
-            if (percentage >= 83) return "B";
-            if (percentage >= 80) return "B-";
-            if (percentage >= 77) return "C+";
-            if (percentage >= 73) return "C";
-            if (percentage >= 70) return "C-";
-            if (percentage >= 60) return "D";
-            return "F";
-        }
 
         //tab switch handlers
         private void OnAssignmentsTabClicked(object sender, EventArgs e)
@@ -118,6 +86,8 @@ namespace App.CMS.Views
         {
             SetTabVisibility(assignments: false, modules: false, grades: true);
             HighlightButton(BtnGrades, BtnAssignments, BtnModules);
+
+            PopulateStudentGradebookTable();
         }
 
         private void SetTabVisibility(bool assignments, bool modules, bool grades)
@@ -216,10 +186,10 @@ namespace App.CMS.Views
             await DisplayAlert("Success", $"Response successfully submitted for '{_currentActiveAssignment.Name}'!", "OK");
 
             var liveCourse = SiteServiceProxy.Current.Courses
-                .FirstOrDefault(c => c.Assignments.Any(a => a.Id == _currentActiveAssignment.Id));
+            .FirstOrDefault(c => c.Assignments.Any(a => a.Id == _currentActiveAssignment.Id));
 
             var liveAssignment = liveCourse?.Assignments
-                .FirstOrDefault(a => a.Id == _currentActiveAssignment.Id);
+            .FirstOrDefault(a => a.Id == _currentActiveAssignment.Id);
 
             if (liveAssignment != null)
             {
@@ -233,7 +203,7 @@ namespace App.CMS.Views
             }
             
 
-            // Reset form UI & File state
+            // Reset form and file state
             SubmissionCard.IsVisible = false;
             StudentResponseEditor.Text = string.Empty;
             _selectedFileName = null;
@@ -301,6 +271,133 @@ namespace App.CMS.Views
             catch (Exception ex)
             {
                 await DisplayAlert("File Error", $"Failed to pick file: {ex.Message}", "OK");
+            }
+        }
+
+
+
+        private void RefreshStudentGradeSummary()
+        {
+            if (_selectedCourse == null || _selectedStudent == null) return;
+
+            // get overall numerical percentage and letter grade from proxy
+            double overallPercentage = SiteServiceProxy.Current.CalculateStudentOverallGrade(_selectedCourse.Id, _selectedStudent.Id);
+            string letterGrade = SiteServiceProxy.Current.GetStudentLetterGrade(_selectedCourse.Id, _selectedStudent.Id);
+
+            // update student view
+            if (LetterGradeLabel != null)
+            {
+                LetterGradeLabel.Text = $"{overallPercentage:F1}% ({letterGrade})";
+            }
+        }
+
+        private void PopulateStudentGradebookTable()
+        {
+            if (_selectedCourse == null) return;
+
+            var currentStudent = _selectedStudent ?? (SiteServiceProxy.Current?.CurrentUser as Student);
+            if (currentStudent == null) return;
+
+            // current course reference
+            var liveCourse = SiteServiceProxy.Current.GetCourseById(_selectedCourse.Id);
+            if (liveCourse == null) return;
+
+            // compute overall grade and letter grade
+            double overallPercentage = SiteServiceProxy.Current.CalculateStudentOverallGrade(liveCourse.Id, currentStudent.Id);
+            string overallLetter = SiteServiceProxy.Current.GetStudentLetterGrade(liveCourse.Id, currentStudent.Id);
+            
+            //Update for the top right letter badge
+            if (LetterGradeLabel != null)
+            {
+                LetterGradeLabel.Text = overallLetter;
+            }
+            if (NumericGradeLabel != null)
+            {
+                NumericGradeLabel.Text = $"{overallPercentage:F1}%";
+            }
+
+            //updates header Card
+            OverallGradeLabel.Text = $"{overallPercentage:F1}% ({overallLetter})";
+            GradingScaleBreakdownLabel.Text = $"Scale: A ≥ {liveCourse.GradeScaleA}% | B ≥ {liveCourse.GradeScaleB}% | C ≥ {liveCourse.GradeScaleC}% | D ≥ {liveCourse.GradeScaleD}%";
+
+            // clears existing table rows
+            StudentGradebookRowsContainer.Children.Clear();
+
+            var assignments = liveCourse.Assignments ?? new List<Assignment>();
+
+            if (!assignments.Any())
+            {
+                StudentGradebookRowsContainer.Children.Add(new Label 
+                { 
+                    Text = "No assignments found for this course.", 
+                    FontSize = 13, 
+                    TextColor = Microsoft.Maui.Graphics.Colors.Gray,
+                    Margin = new Thickness(0, 10, 0, 0)
+                });
+                return;
+            }
+
+            // build a row for every assignment in the course
+            foreach (var assignment in assignments)
+            {
+                var submission = assignment.Submissions?.FirstOrDefault(s => s.StudentId == currentStudent.Id);
+
+                string scoreText = "--";
+                string pctText = "--";
+                string letterText = "Ungraded";
+                Color letterColor = Microsoft.Maui.Graphics.Colors.Gray;
+
+                if (submission != null && submission.IsGraded && submission.Grade.HasValue)
+                {
+                    double maxPts = assignment.TotalPoints > 0 ? assignment.TotalPoints : 100.0;
+                    double earnedPts = submission.Grade.Value;
+                    double pct = (earnedPts / maxPts) * 100.0;
+
+                    scoreText = $"{earnedPts}/{maxPts}";
+                    pctText = $"{pct:F1}%";
+                    
+                    //map percentage to scale setting from liveCourse
+                    letterText = SiteServiceProxy.Current.GetLetterGradeForPercentage(liveCourse.Id, pct);
+                    letterColor = Microsoft.Maui.Graphics.Color.FromArgb("#16A34A"); // Green for graded
+                }
+
+                // table rows layout
+                var rowBorder = new Border
+                {
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 6 },
+                    Padding = new Thickness(10),
+                    BackgroundColor = Microsoft.Maui.Graphics.Colors.White,
+                    Stroke = Microsoft.Maui.Graphics.Color.FromArgb("#E2E8F0")
+                };
+
+                var rowGrid = new Grid
+                {
+                    ColumnDefinitions =
+                    {
+                        new ColumnDefinition { Width = GridLength.Star },
+                        new ColumnDefinition { Width = new GridLength(80) },
+                        new ColumnDefinition { Width = new GridLength(80) },
+                        new ColumnDefinition { Width = new GridLength(80) }
+                    }
+                };
+
+                var nameLabel = new Label { Text = assignment.Name, FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = Microsoft.Maui.Graphics.Color.FromArgb("#0F172A"), VerticalOptions = LayoutOptions.Center };
+                var scoreLbl = new Label { Text = scoreText, FontSize = 13, TextColor = Microsoft.Maui.Graphics.Color.FromArgb("#334155"), HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+                var pctLbl = new Label { Text = pctText, FontSize = 13, TextColor = Microsoft.Maui.Graphics.Color.FromArgb("#334155"), HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+                var letterLbl = new Label { Text = letterText, FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = letterColor, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+
+                Grid.SetColumn(nameLabel, 0);
+                Grid.SetColumn(scoreLbl, 1);
+                Grid.SetColumn(pctLbl, 2);
+                Grid.SetColumn(letterLbl, 3);
+
+                rowGrid.Children.Add(nameLabel);
+                rowGrid.Children.Add(scoreLbl);
+                rowGrid.Children.Add(pctLbl);
+                rowGrid.Children.Add(letterLbl);
+
+                rowBorder.Content = rowGrid;
+                StudentGradebookRowsContainer.Children.Add(rowBorder);
             }
         }
 

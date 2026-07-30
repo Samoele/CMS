@@ -38,7 +38,6 @@
                             
                             <!--letter grade (A for now) -->
                             <Label x:Name="LetterGradeLabel" 
-                                   Text="A" 
                                    FontSize="26" 
                                    FontAttributes="Bold" 
                                    TextColor="#22C55E" 
@@ -46,7 +45,6 @@
                             
                             <!--num grade in percentage (default for now) -->
                             <Label x:Name="NumericGradeLabel" 
-                                   Text="94.5%" 
                                    FontSize="13" 
                                    FontAttributes="Bold" 
                                    TextColor="#F8FAFC" 
@@ -273,34 +271,36 @@
                 </CollectionView>
             </VerticalStackLayout>
 
-            <!--Grades Section -->
-            <VerticalStackLayout x:Name="GradesSection" Spacing="10" IsVisible="False">
-                <Label Text="Your Course Grade" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
-                <Frame BorderColor="#CBD5E1" CornerRadius="8" Padding="15" BackgroundColor="White">
-                    <VerticalStackLayout Spacing="8">
-                        <Label x:Name="DetailedGradeSummaryLabel" FontSize="16" TextColor="#334155" />
+            <!-- Grades Section -->
+            <VerticalStackLayout x:Name="GradesSection" Spacing="15" IsVisible="False">
+                
+                <!-- course grade section header-->
+                <Border StrokeShape="RoundRectangle 10" Padding="15" BackgroundColor="#F0F9FF" Stroke="#BAE6FD">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Your Course Grade" FontSize="18" FontAttributes="Bold" TextColor="#0369A1" />
+                        <Label x:Name="OverallGradeLabel" FontSize="22" FontAttributes="Bold" TextColor="#0284C7" Text="Calculating..." />
+                        <Label x:Name="GradingScaleBreakdownLabel" FontSize="12" TextColor="#0369A1" />
                     </VerticalStackLayout>
-                </Frame>
+                </Border>
+
+                <Label Text="Assignment Gradebook" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,5,0,0" />
+
+                <!--gradebook table header -->
+                <Border StrokeShape="RoundRectangle 6" Padding="10" BackgroundColor="#E2E8F0" Stroke="Transparent">
+                    <Grid ColumnDefinitions="*, 80, 80, 80">
+                        <Label Grid.Column="0" Text="Assignment" FontAttributes="Bold" FontSize="13" TextColor="#334155" />
+                        <Label Grid.Column="1" Text="Score" FontAttributes="Bold" FontSize="13" TextColor="#334155" HorizontalOptions="Center" />
+                        <Label Grid.Column="2" Text="Pct (%)" FontAttributes="Bold" FontSize="13" TextColor="#334155" HorizontalOptions="Center" />
+                        <Label Grid.Column="3" Text="Grade" FontAttributes="Bold" FontSize="13" TextColor="#334155" HorizontalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <!--dynamic gradebook container -->
+                <VerticalStackLayout x:Name="StudentGradebookRowsContainer" Spacing="6" />
+
             </VerticalStackLayout>
 
-
-            <!-- student assignment template for graded assignments-->
-            <VerticalStackLayout Spacing="4">
-                <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
-                <Label Text="{Binding Description}" FontSize="13" TextColor="#475569" />
-                
-                <!--display student grade if graded -->
-                <Label Text="{Binding Grade}" FontSize="14" FontAttributes="Bold" TextColor="#16A34A" Margin="0,4,0,0" />
-                
-                <!--display teacher feedback if given-->
-                <Label Text="{Binding Comment, StringFormat='Teacher Feedback: {0}'}" 
-                    FontSize="12" 
-                    FontAttributes="Italic" 
-                    TextColor="#2563EB" 
-                    IsVisible="{Binding HasTeacherComment}" />
-            </VerticalStackLayout>
-
-            <!-- Navigation Back Button -->
+            <!-- navigation back button -->
             <Button Text="⬅️ Back to Student Portal" BackgroundColor="#64748B" TextColor="White" CornerRadius="8" HeightRequest="45" Margin="0,15,0,0" Clicked="OnBackClicked" />
 
         </VerticalStackLayout>
