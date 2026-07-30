@@ -148,7 +148,7 @@ namespace App.CMS.Views
         {
             if (string.IsNullOrWhiteSpace(AssignmentNameEntry.Text))
             {
-                await DisplayAlert("Validation Error", "Please provide an assignment title.", "OK");
+                await DisplayAlert("Validation Error", "Please provide a title.", "OK");
                 return;
             }
 
@@ -158,19 +158,20 @@ namespace App.CMS.Views
                 return;
             }
 
-            if (_editingAssignment != null) //if assg exist then edits
+            if (_editingAssignment != null) //editing existing assignment or quiz (updated for quizzes)
             {
-                //updates an existing assignment
                 _editingAssignment.Name = AssignmentNameEntry.Text.Trim();
-                _editingAssignment.Description = AssignmentDescriptionEntry.Text?.Trim();
+                _editingAssignment.IsQuiz = _isCreatingQuiz;
+                _editingAssignment.QuizQuestion = _isCreatingQuiz ? (QuizQuestionEditor.Text?.Trim() ?? string.Empty) : string.Empty;
+                _editingAssignment.Description = _isCreatingQuiz ? string.Empty : (AssignmentDescriptionEntry.Text?.Trim() ?? string.Empty);
                 _editingAssignment.TotalPoints = TotalPoints;
                 _editingAssignment.DueDate = DueDateEntry.Date;
 
-                await DisplayAlert("Success", $"Assignment '{_editingAssignment.Name}' updated successfully.", "OK");
+                string itemType = _isCreatingQuiz ? "Quiz" : "Assignment";
+                await DisplayAlert("Success", $"{itemType} '{_editingAssignment.Name}' updated successfully.", "OK");
             }
-            else
+            else // new assignment or quiz
             {
-                //create a new assignment and assign a new ID
                 int nextId = _selectedCourse.Assignments.Any() 
                     ? _selectedCourse.Assignments.Max(a => a.Id) + 1 : 1;
 
@@ -178,14 +179,18 @@ namespace App.CMS.Views
                 {
                     Id = nextId,
                     Name = AssignmentNameEntry.Text.Trim(),
-                    Description = AssignmentDescriptionEntry.Text?.Trim(),
+                    IsQuiz = _isCreatingQuiz,
+                    QuizQuestion = _isCreatingQuiz ? (QuizQuestionEditor.Text?.Trim() ?? string.Empty) : string.Empty,
+                    Description = _isCreatingQuiz ? string.Empty : (AssignmentDescriptionEntry.Text?.Trim() ?? string.Empty),
                     TotalPoints = TotalPoints,
                     DueDate = DueDateEntry.Date,
-                    Submissions = new List<Submission>() //initializes submissions container
+                    Submissions = new List<Submission>()
                 };
 
                 _selectedCourse.Assignments.Add(newAssignment);
-                await DisplayAlert("Success", $"Assignment '{newAssignment.Name}' added to course.", "OK");
+
+                string itemType = _isCreatingQuiz ? "Quiz" : "Assignment";
+                await DisplayAlert("Success", $"{itemType} '{newAssignment.Name}' added to course.", "OK");
             }
 
             ResetAssignmentForm();
@@ -257,9 +262,17 @@ namespace App.CMS.Views
         //View submissions by students
         private async void OnViewSubmissionsClicked(object sender, EventArgs e)
         {
-            if (sender is Button button && button.BindingContext is Assignment assignment)
+            if (sender is Button button && button.CommandParameter is Assignment assignment)
             {
-                await Navigation.PushAsync(new AssignmentSubmissionsPage(assignment));
+                try
+                {
+                    await Navigation.PushAsync(new AssignmentSubmissionsPage(assignment));
+                }
+                catch (Exception ex)
+                {
+                    await DisplayAlert("Navigation Crash Error", 
+                        $"Message: {ex.Message}\n\nStack Trace: {ex.StackTrace}", "OK");
+                }
             }
         }
 
@@ -1038,6 +1051,34 @@ namespace App.CMS.Views
             {
                 await DisplayAlert("Export Error", $"Failed to export gradebook:\n{ex.Message}", "OK");
             }
+        }
+
+        //Quiz in assignment event handlers
+        private bool _isCreatingQuiz = false;
+        private void OnSelectStandardTypeClicked(object sender, EventArgs e)
+        {
+            _isCreatingQuiz = false;
+            BtnSelectStandard.BackgroundColor = Color.FromArgb("#2563EB");
+            BtnSelectStandard.TextColor = Colors.White;
+
+            BtnSelectQuiz.BackgroundColor = Color.FromArgb("#E2E8F0");
+            BtnSelectQuiz.TextColor = Color.FromArgb("#334155");
+
+            AssignmentDescriptionEntry.IsVisible = true;
+            QuizQuestionEditor.IsVisible = false;
+        }
+
+        private void OnSelectQuizTypeClicked(object sender, EventArgs e)
+        {
+            _isCreatingQuiz = true;
+            BtnSelectQuiz.BackgroundColor = Color.FromArgb("#2563EB");
+            BtnSelectQuiz.TextColor = Colors.White;
+
+            BtnSelectStandard.BackgroundColor = Color.FromArgb("#E2E8F0");
+            BtnSelectStandard.TextColor = Color.FromArgb("#334155");
+
+            AssignmentDescriptionEntry.IsVisible = false;
+            QuizQuestionEditor.IsVisible = true;
         }
 
         

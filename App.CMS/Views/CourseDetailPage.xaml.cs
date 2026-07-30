@@ -10,6 +10,10 @@ namespace App.CMS.Views
     {
         private readonly Course _selectedCourse;
         private readonly Student _selectedStudent;
+        private Assignment _currentActiveAssignment;
+        private string? _selectedFileName;
+        private byte[]? _selectedFileData;
+
 
         public CourseDetailPage(Course course, Student student)
         {
@@ -144,7 +148,6 @@ namespace App.CMS.Views
             await Navigation.PopAsync();
         }
 
-        private Assignment _currentActiveAssignment;
         private void OnOpenSubmissionFormClicked(object sender, EventArgs e)
         {
             if (sender is Button button && button.CommandParameter is Assignment selectedAssignment)
@@ -156,13 +159,14 @@ namespace App.CMS.Views
             }
         }
 
-        private async void OnSubmitResponseClicked(object sender, EventArgs e)
+        private async void OnSubmitAssignmentClicked(object sender, EventArgs e)
         {
             string responseText = StudentResponseEditor.Text?.Trim() ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(responseText))
+            // Validate that either text or a file is provided
+            if (string.IsNullOrWhiteSpace(responseText) && string.IsNullOrWhiteSpace(_selectedFileName))
             {
-                await DisplayAlert("Validation Error", "Please enter a response before submitting.", "OK");
+                await DisplayAlert("Validation Error", "Please enter a response or attach a file before submitting.", "OK");
                 return;
             }
 
@@ -172,9 +176,7 @@ namespace App.CMS.Views
                 return;
             }
 
-            //get current logged in student from proxy/service
             var currentStudent = _selectedStudent ?? (SiteServiceProxy.Current?.CurrentUser as Student);
-
 
             if (currentStudent == null)
             {
@@ -184,7 +186,6 @@ namespace App.CMS.Views
 
             _currentActiveAssignment.Submissions ??= new List<Submission>();
 
-            //single submission check: avoids multiple submissions per assignment
             bool alreadySubmitted = _currentActiveAssignment.Submissions
                 .Any(s => s.StudentId == currentStudent.Id);
 
@@ -196,8 +197,7 @@ namespace App.CMS.Views
                 return;
             }
 
-            //create and save new Submission with student's actual name and ID
-            int nextId = _currentActiveAssignment.Submissions.Any() 
+            int nextId = _currentActiveAssignment.Submissions.Any() == true
                 ? _currentActiveAssignment.Submissions.Max(s => s.Id) + 1 : 1;
 
             var newSubmission = new Submission
@@ -206,6 +206,8 @@ namespace App.CMS.Views
                 StudentId = currentStudent.Id,
                 StudentName = currentStudent.Name,
                 Content = responseText,
+                FileName = _selectedFileName,
+                FileData = _selectedFileData,
                 SubmissionDate = DateTime.Now
             };
 
@@ -213,9 +215,34 @@ namespace App.CMS.Views
 
             await DisplayAlert("Success", $"Response successfully submitted for '{_currentActiveAssignment.Name}'!", "OK");
 
-            //resets form UI
+            var liveCourse = SiteServiceProxy.Current.Courses
+                .FirstOrDefault(c => c.Assignments.Any(a => a.Id == _currentActiveAssignment.Id));
+
+            var liveAssignment = liveCourse?.Assignments
+                .FirstOrDefault(a => a.Id == _currentActiveAssignment.Id);
+
+            if (liveAssignment != null)
+            {
+                liveAssignment.Submissions ??= new List<Submission>();
+                
+                //guard against adding the same student submission twice
+                if (!liveAssignment.Submissions.Any(s => s.StudentId == currentStudent.Id))
+                {
+                    liveAssignment.Submissions.Add(newSubmission);
+                }
+            }
+            
+
+            // Reset form UI & File state
             SubmissionCard.IsVisible = false;
             StudentResponseEditor.Text = string.Empty;
+            _selectedFileName = null;
+            _selectedFileData = null;
+            if (SelectedFileLabel != null)
+            {
+                SelectedFileLabel.Text = string.Empty;
+                SelectedFileLabel.IsVisible = false;
+            }
             _currentActiveAssignment = null;
         }
 
@@ -249,6 +276,31 @@ namespace App.CMS.Views
 
                     await DisplayAlert($"📁 {file.Name}", $"File Path / Resource URL:\n\n{pathText}", "Close");
                 }
+            }
+        }
+
+
+        private async void OnAttachFileClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                var result = await FilePicker.Default.PickAsync();
+                if (result != null)
+                {
+                    _selectedFileName = result.FileName;
+
+                    using var stream = await result.OpenReadAsync();
+                    using var memoryStream = new MemoryStream();
+                    await stream.CopyToAsync(memoryStream);
+                    _selectedFileData = memoryStream.ToArray();
+
+                    SelectedFileLabel.Text = $"📎 Attached: {_selectedFileName}";
+                    SelectedFileLabel.IsVisible = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("File Error", $"Failed to pick file: {ex.Message}", "OK");
             }
         }
 

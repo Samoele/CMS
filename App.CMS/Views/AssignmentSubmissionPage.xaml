@@ -8,7 +8,7 @@
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="20">
 
-            <!-- Assignment Header-->
+            <!-- Assignment Header -->
             <Border StrokeShape="RoundRectangle 10" Padding="15" BackgroundColor="White" Stroke="#E2E8F0">
                 <VerticalStackLayout Spacing="6">
                     <Label x:Name="AssignmentTitleLabel" FontSize="20" FontAttributes="Bold" TextColor="#0F172A" />
@@ -16,7 +16,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!--Submission list-->
+            <!-- Submission List -->
             <Label Text="Student Submissions:" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" />
 
             <CollectionView x:Name="SubmissionsCollectionView" SelectionMode="None">
@@ -30,10 +30,26 @@
                                     <Label Grid.Column="1" Text="{Binding GradeText}" FontSize="14" FontAttributes="Bold" TextColor="#2563EB" />
                                 </Grid>
 
-                                <!-- Content submitted by student-->
+                                <!-- Content submitted by student -->
                                 <Border BackgroundColor="#F1F5F9" Padding="10" StrokeShape="RoundRectangle 6" Stroke="Transparent">
                                     <Label Text="{Binding Content}" FontSize="13" TextColor="#334155" />
                                 </Border>
+
+                                <!-- file link (Only visible if student uploaded a file) -->
+                                <HorizontalStackLayout Spacing="6" IsVisible="{Binding HasFile}" Margin="0,2,0,2">
+                                    <Label Text="Attached File:" FontSize="13" FontAttributes="Bold" TextColor="#0284C7" VerticalOptions="Center" />
+                                    
+                                    <Button Text="{Binding FileName, StringFormat='📄 {0}'}"
+                                            Clicked="OnOpenAttachedFileClicked"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="Transparent"
+                                            TextColor="#0284C7"
+                                            FontAttributes="Bold"
+                                            FontSize="13"
+                                            Padding="0"
+                                            HeightRequest="30"
+                                            VerticalOptions="Center" />
+                                </HorizontalStackLayout>
 
                                 <!-- Existing teacher feedback if already graded -->
                                 <Label Text="{Binding Comment, StringFormat='Comment: {0}'}" 
@@ -42,7 +58,7 @@
                                        TextColor="#475569" 
                                        IsVisible="{Binding HasComment}" />
 
-                                <!--Grade Button-->
+                                <!-- Grade Button -->
                                 <Button Text="Grade Submission" 
                                         BackgroundColor="#0F172A" 
                                         TextColor="White" 

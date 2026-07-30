@@ -227,22 +227,36 @@
                             Clicked="OnExportAssignmentClicked" />
                 </Grid>
 
-                <!-- create/edit assignment form -->
+                <!-- Create / Edit Assignment or Quiz Form -->
                 <Border StrokeShape="RoundRectangle 10" Padding="15" BackgroundColor="White" Stroke="#E2E8F0">
                     <VerticalStackLayout Spacing="12">
-                        <Label x:Name="AssignmentFormHeader" Text="Add New Assignment" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                        <Label x:Name="AssignmentFormHeader" Text="Add New Item" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
 
-                        <Entry x:Name="AssignmentNameEntry" Placeholder="Assignment Title (e.g. Midterm Exam)" />
-                        <Editor x:Name="AssignmentDescriptionEntry" Placeholder="Description / Instructions..." HeightRequest="80" />
-
+                        <!--Item Type Selection Buttons -->
                         <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
-                            <Entry x:Name="TotalPointsEntry" Grid.Column="0" Placeholder="Total Points " Keyboard="Numeric" />
+                            <Button x:Name="BtnSelectStandard" Grid.Column="0" Text="Standard Assignment" Clicked="OnSelectStandardTypeClicked" BackgroundColor="#2563EB" TextColor="White" CornerRadius="6" />
+                            <Button x:Name="BtnSelectQuiz" Grid.Column="1" Text="Quiz" Clicked="OnSelectQuizTypeClicked" BackgroundColor="#E2E8F0" TextColor="#334155" CornerRadius="6" />
+                        </Grid>
+
+                        <!-- Title Entry -->
+                        <Entry x:Name="AssignmentNameEntry" Placeholder="Title / Name (e.g., Midterm Quiz)" />
+
+                        <!-- regular Assignment Description (Visible for normal assg) -->
+                        <Editor x:Name="AssignmentDescriptionEntry" Placeholder="Description / Instructions..." HeightRequest="80" IsVisible="True" />
+
+                        <!-- quiz question (Visible for quiz) -->
+                        <Editor x:Name="QuizQuestionEditor" Placeholder="Enter the Quiz Question for students to answer..." HeightRequest="90" BackgroundColor="#EFF6FF" IsVisible="False" />
+
+                        <!-- points and due date -->
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                            <Entry x:Name="TotalPointsEntry" Grid.Column="0" Placeholder="Total Points" Keyboard="Numeric" />
                             <DatePicker x:Name="DueDateEntry" Grid.Column="1" Format="d" MinimumDate="2026-01-01" />
                         </Grid>
 
+                        <!--form action buttons -->
                         <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,5,0,0">
-                            <Button x:Name="SaveAssignmentBtn" Grid.Column="0" Text="Save Assignment" BackgroundColor="#16A34A" TextColor="White" CornerRadius="6" Clicked="OnSaveAssignmentClicked" />
-                            <Button x:Name="CancelAssignmentEditBtn" Grid.Column="1" Text="Cancel" BackgroundColor="#64748B" TextColor="White" CornerRadius="6" IsVisible="False" Clicked="OnCancelAssignmentEditClicked" />
+                            <Button x:Name="SaveAssignmentBtn" Grid.Column="0" Text="Save Item" BackgroundColor="#16A34A" TextColor="White" CornerRadius="6" Clicked="OnSaveAssignmentClicked" />
+                            <Button x:Name="CancelAssignmentEditBtn" Grid.Column="1" Text="Cancel" BackgroundColor="#64748B" TextColor="White" CornerRadius="6" IsVisible="True" Clicked="OnCancelAssignmentEditClicked" />
                         </Grid>
                     </VerticalStackLayout>
                 </Border>
