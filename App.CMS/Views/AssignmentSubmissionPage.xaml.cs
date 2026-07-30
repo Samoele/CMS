@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Maui.Controls;
 using Library.CMS.Models;
+using Library.CMS.Services;
+using System.Collections.ObjectModel;
+
 
 namespace App.CMS.Views
 {
@@ -22,10 +25,25 @@ namespace App.CMS.Views
 
         private void RefreshSubmissionsList()
         {
-            _assignment.Submissions ??= new List<Submission>();
+            if (_assignment != null)
+            {
+                // live assg from SiteServiceProxy
+                var liveAssignment = SiteServiceProxy.Current.Courses
+                    .SelectMany(c => c.Assignments)
+                    .FirstOrDefault(a => a.Id == _assignment.Id);
 
-            SubmissionsCollectionView.ItemsSource = null;
-            SubmissionsCollectionView.ItemsSource = _assignment.Submissions;
+                var submissions = liveAssignment?.Submissions ?? _assignment.Submissions ?? new List<Submission>();
+
+                // filter duplicates for only one submission per student
+                var uniqueSubmissions = submissions
+                    .GroupBy(s => s.StudentId)
+                    .Select(g => g.First())
+                    .ToList();
+
+                
+                SubmissionsCollectionView.ItemsSource = null;
+                SubmissionsCollectionView.ItemsSource = new ObservableCollection<Submission>(uniqueSubmissions);
+            }
         }
 
         private async void OnGradeSubmissionClicked(object sender, EventArgs e)
@@ -64,5 +82,41 @@ namespace App.CMS.Views
         }
 
         private async void OnBackClicked(object sender, EventArgs e) => await Navigation.PopAsync();
+
+        private async void OnOpenAttachedFileClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is Submission submission)
+            {
+                if (!submission.HasFile || submission.FileData == null || submission.FileData.Length == 0)
+                {
+                    await DisplayAlert("File Error", "No file turned in with this submission.", "OK");
+                    return;
+                }
+
+                try
+                {
+                    string tempFolder = FileSystem.CacheDirectory;
+                    string tempFilePath = Path.Combine(tempFolder, submission.FileName!);
+
+                    await File.WriteAllBytesAsync(tempFilePath, submission.FileData);
+
+                    await Launcher.Default.OpenAsync(new OpenFileRequest
+                    {
+                        File = new ReadOnlyFile(tempFilePath)
+                    });
+                }
+                catch (Exception ex)
+                {
+                    await DisplayAlert("Error Opening File", $"Could not open file: {ex.Message}", "OK");
+                }
+            }
+        }
+
+
+
+
+
+
+
     }
 }

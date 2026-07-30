@@ -170,6 +170,18 @@
                                 BackgroundColor="White" 
                                 TextColor="#0F172A" 
                                 FontSize="14" />
+                        <!-- File Picker Row -->
+                        <Button Text="📎 Attach File" 
+                                Clicked="OnAttachFileClicked" 
+                                BackgroundColor="#E2E8F0" 
+                                TextColor="#0F172A" />
+
+                        <!-- file picker label-->
+                        <Label x:Name="SelectedFileLabel" 
+                            FontSize="13" 
+                            TextColor="#0284C7" 
+                            FontAttributes="Bold" 
+                            IsVisible="False" />
 
                         <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
                             <Button Grid.Column="0" 
@@ -177,7 +189,7 @@
                                     BackgroundColor="#16A34A" 
                                     TextColor="White" 
                                     CornerRadius="6" 
-                                    Clicked="OnSubmitResponseClicked" />
+                                    Clicked="OnSubmitAssignmentClicked" />
 
                             <Button Grid.Column="1" 
                                     Text="Cancel" 

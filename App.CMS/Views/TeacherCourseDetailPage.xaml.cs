@@ -262,9 +262,17 @@ namespace App.CMS.Views
         //View submissions by students
         private async void OnViewSubmissionsClicked(object sender, EventArgs e)
         {
-            if (sender is Button button && button.BindingContext is Assignment assignment)
+            if (sender is Button button && button.CommandParameter is Assignment assignment)
             {
-                await Navigation.PushAsync(new AssignmentSubmissionsPage(assignment));
+                try
+                {
+                    await Navigation.PushAsync(new AssignmentSubmissionsPage(assignment));
+                }
+                catch (Exception ex)
+                {
+                    await DisplayAlert("Navigation Crash Error", 
+                        $"Message: {ex.Message}\n\nStack Trace: {ex.StackTrace}", "OK");
+                }
             }
         }
 
