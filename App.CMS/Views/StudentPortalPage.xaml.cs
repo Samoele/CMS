@@ -20,6 +20,35 @@ namespace App.CMS.Views
             LoadStudents();
         }
 
+        //OnAppearing method to reload live students from database
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+
+            //fetch live student records from db through ssproxy
+            await SiteServiceProxy.Current.RefreshStudentsFromDatabaseAsync();
+
+            //bind picker control to display students
+            if (StudentPicker != null)
+            {
+                StudentPicker.ItemsSource = null;
+                StudentPicker.ItemsSource = SiteServiceProxy.Current.GetStudents();
+            }
+        }
+
+        private void OnStudentPickerSelectedIndexChanged(object sender, EventArgs e)
+        {
+            var picker = sender as Picker;
+            var selectedStudent = picker?.SelectedItem as Student;
+
+            if (selectedStudent != null)
+            {
+                //set active session user in ssproxy to guarantee update on other app pages
+                SiteServiceProxy.Current.CurrentUser = selectedStudent;
+            
+            }
+        }
+
         private void LoadStudents()
         {
             // get available students (alice and boib)

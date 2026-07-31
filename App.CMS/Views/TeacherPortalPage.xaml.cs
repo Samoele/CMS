@@ -12,14 +12,6 @@ namespace App.CMS.Views
             InitializeComponent();
         }
 
-        
-
-        //reload courses every time the page becomes visible
-        // protected override void OnAppearing()
-        // {
-        //     base.OnAppearing();
-        //     LoadTeacherCourses();
-        // }
 
         private void LoadTeacherCourses()
         {
