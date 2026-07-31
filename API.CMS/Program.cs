@@ -7,8 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings"));
 
-//Register StudentMongoService as a Singleton
+//Register StudentMongoService and CourseMongoService as a Singleton
 builder.Services.AddSingleton<StudentMongoService>();
+builder.Services.AddSingleton<CourseMongoService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
