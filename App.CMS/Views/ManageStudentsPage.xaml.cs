@@ -17,6 +17,17 @@ namespace App.CMS.Views
             RefreshStudentList();
         }
 
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+
+            //Fetch live student data from MongoDB Atlas via Web API and Proxy
+            await SiteServiceProxy.Current.RefreshStudentsFromDatabaseAsync();
+
+            //refresh the view on teacher dashboard
+            StudentsCollectionView.ItemsSource = SiteServiceProxy.Current.GetStudents();
+        }
+
         private void RefreshStudentList()
         {
             var students = SiteServiceProxy.Current?.GetStudents() ?? new List<Student>();
@@ -32,29 +43,47 @@ namespace App.CMS.Views
                 return;
             }
 
-            //selected classification or default to "Freshman"
+            // set classification or default to "Freshman"
             string classification = ClassificationPicker.SelectedItem?.ToString() ?? "Freshman";
 
             if (_editingStudent != null)
             {
-                //update existing student
+                //update existing student fields
                 _editingStudent.Name = StudentNameEntry.Text.Trim();
                 _editingStudent.Classification = classification;
 
-                await DisplayAlert("Success", $"{_editingStudent.Name} updated successfully.", "OK");
+                //updates to database through ssproxy
+                bool success = await SiteServiceProxy.Current.UpdateStudentAsync(_editingStudent);
+
+                if (success)
+                {
+                    await DisplayAlert("Success", $"{_editingStudent.Name} updated successfully.", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Failed to update student in database.", "OK");
+                }
             }
             else
             {
-                //create new student
+                //create new student object
                 var newStudent = new Student 
                 { 
                     Name = StudentNameEntry.Text.Trim(),
                     Classification = classification
                 };
 
-                // SiteServiceProxy handles auto generating unique ID and appending to roster (AddStudentMethod)
-                SiteServiceProxy.Current?.AddStudent(newStudent);
-                await DisplayAlert("Success", $"{newStudent.Name} added as {newStudent.Classification} (ID: {newStudent.Id}).", "OK");
+                // new student to MongoDB Atlas through ssproxy
+                bool success = await SiteServiceProxy.Current.AddStudentAsync(newStudent);
+
+                if (success)
+                {
+                    await DisplayAlert("Success", $"{newStudent.Name} added as {newStudent.Classification} (ID: {newStudent.Id}).", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Failed to save student to database. Ensure API.CMS is running.", "OK");
+                }
             }
 
             ResetForm();
@@ -87,25 +116,32 @@ namespace App.CMS.Views
 
                 if (confirm)
                 {
-                    //executes cascading delete
-                    ExecuteCascadingStudentDeletion(studentToDelete.Id);
-                    
-                    await DisplayAlert("Deleted", $"{studentToDelete.Name} has been erased from the system.", "OK");
-                    RefreshStudentList();
+                    //cascading delete and removes student from DB 
+                    bool success = await ExecuteCascadingStudentDeletionAsync(studentToDelete.Id);
+
+                    if (success)
+                    {
+                        await DisplayAlert("Deleted", $"{studentToDelete.Name} has been erased from the system.", "OK");
+                        RefreshStudentList();
+                    }
+                    else
+                    {
+                        await DisplayAlert("Error", "Failed to delete student from Database.", "OK");
+                    }
                 }
             }
         }
 
-        private void ExecuteCascadingStudentDeletion(int studentId)
+        private async Task<bool> ExecuteCascadingStudentDeletionAsync(int studentId)
         {
-            //Remove from all course rosters
+            //remove from all course rosters in local instance of ssproxy
             var courses = SiteServiceProxy.Current?.GetCourses() ?? new List<Course>();
             foreach (var course in courses)
             {
-                //unreroll student from course roster
+                //unreroll students from course roster
                 SiteServiceProxy.Current?.UnenrollStudent(course.Id, studentId);
 
-                //clear assignments submissions and grades associated with this student
+                //also clear assignment submissions and grades associated with this student
                 if (course.Assignments != null)
                 {
                     foreach (var assignment in course.Assignments)
@@ -115,8 +151,13 @@ namespace App.CMS.Views
                 }
             }
 
-            //remove student from global university directory
-            SiteServiceProxy.Current?.DeleteStudent(studentId);
+            //removes student from global university directory in DB through proxy
+            if (SiteServiceProxy.Current != null)
+            {
+                return await SiteServiceProxy.Current.DeleteStudentAsync(studentId);
+            }
+
+            return false;
         }
 
         private void OnCancelEditClicked(object sender, EventArgs e) => ResetForm();
