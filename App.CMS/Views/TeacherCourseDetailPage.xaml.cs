@@ -1110,7 +1110,17 @@ namespace App.CMS.Views
             QuizQuestionEditor.IsVisible = true;
         }
 
-        //Methods to
+        //method to search students in roster
+        private void OnRosterSearchTextChanged(object sender, TextChangedEventArgs e)
+        {
+            string query = e.NewTextValue?.Trim().ToLower() ?? string.Empty;
+
+            var filteredRoster = _selectedCourse.Roster
+                .Where(s => s.Name.ToLower().Contains(query) || s.Id.ToString().Contains(query))
+                .ToList();
+
+            RosterCollectionView.ItemsSource = filteredRoster;
+        }
 
         
 
