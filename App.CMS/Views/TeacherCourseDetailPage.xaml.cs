@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using Microsoft.Maui.Controls;
 using Library.CMS.Models;
 using Library.CMS.Services;
 
@@ -846,7 +842,7 @@ namespace App.CMS.Views
                 _selectedCourse.GradeScaleC = c;
                 _selectedCourse.GradeScaleD = d;
 
-                await DisplayAlert("Success", "Grade thresholds updated!", "OK");
+                await DisplayAlert("Success", "Grade ranges updated!", "OK");
             }
             else
             {
@@ -861,35 +857,24 @@ namespace App.CMS.Views
 
         private async void OnSaveCourseInfoClicked(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(EditCourseNameEntry.Text) || string.IsNullOrWhiteSpace(EditCourseCodeEntry.Text))
-            {
-                await DisplayAlert("Validation Error", "Course title and code cannot be empty.", "OK");
-                return;
-            }
+            if (_selectedCourse == null) return;
 
-            _selectedCourse.Name = EditCourseNameEntry.Text.Trim();
-            _selectedCourse.Code = EditCourseCodeEntry.Text.Trim();
+            //update fields of course object
+            _selectedCourse.Name = EditCourseNameEntry.Text?.Trim();
+            _selectedCourse.Code = EditCourseCodeEntry.Text?.Trim();
             _selectedCourse.Description = EditCourseDescEntry.Text?.Trim();
 
-            CourseNameLabel.Text = _selectedCourse.Name;
-            CourseCodeLabel.Text = $"Course Code: {_selectedCourse.Code}";
+            // update to mongodb database
+            bool success = await SiteServiceProxy.Current.UpdateCourseAsync(_selectedCourse);
 
-            await DisplayAlert("Success", "Course information updated successfully!", "OK");
-
-            //update with SSProxy so teacher dashboard gets updated info
-            var courses = SiteServiceProxy.Current?.GetCourses();
-            var courseInService = courses?.FirstOrDefault(c => c.Id == _selectedCourse.Id);
-            if (courseInService != null)
+            if (success)
             {
-                courseInService.Name = _selectedCourse.Name;
-                courseInService.Code = _selectedCourse.Code;
-                courseInService.Description = _selectedCourse.Description;
+                await DisplayAlert("Success", "Course details updated in database!", "OK");
             }
-
-            // Update local page labels //does not update and must check to fix
-            CourseNameLabel.Text = _selectedCourse.Name;
-            CourseCodeLabel.Text = $"Course Code: {_selectedCourse.Code}";
-
+            else
+            {
+                await DisplayAlert("Error", "Failed to update course in MongoDB Atlas. Ensure API.CMS is running.", "OK");
+            }
         }
 
         //export event handlers for gradebook
@@ -1080,6 +1065,8 @@ namespace App.CMS.Views
             AssignmentDescriptionEntry.IsVisible = false;
             QuizQuestionEditor.IsVisible = true;
         }
+
+        //Methods to
 
         
 

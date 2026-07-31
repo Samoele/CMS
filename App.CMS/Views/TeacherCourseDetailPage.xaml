@@ -16,7 +16,7 @@
                     <Label x:Name="CourseDescriptionLabel" FontSize="14" TextColor="#CBD5E1" Margin="0,5,0,0" />
                 </VerticalStackLayout>
             </Border>
-            <!--COURSE SETTINGS BUTTON(Letter ranges/grade % and future options) -->
+            <!--COURSE SETTINGS BUTTON(Letter ranges/grade percentage and future options) -->
             <Button Grid.Column="1" 
                     Text="⚙️ Settings" 
                     BackgroundColor="#334155" 
@@ -69,7 +69,7 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <!--Option Card 2: Set assignment weights -->
+                <!--Option2: Set assignment weighs -->
                 <Border BackgroundColor="#F8FAFC" Stroke="#CBD5E1" StrokeShape="RoundRectangle 10" Padding="15">
                     <VerticalStackLayout Spacing="12">
                         <Label Text="Assignment Weight Percentage" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
@@ -96,7 +96,7 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <!--Option Card 3: Course Details(Course editing)-->
+                <!--Option3: Course Details(Course editing)-->
                 <Border BackgroundColor="#F8FAFC" Stroke="#CBD5E1" StrokeShape="RoundRectangle 10" Padding="15">
                     <VerticalStackLayout Spacing="12">
                         <Label Text="Basic Course Info" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
@@ -180,7 +180,8 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
 
-                <!-- Enroll Student Section -->
+                <!-- Enroll Student Section 
+                Binding ID on enroll student to differentiate if duplicate (Barry allen example)-->
                 <Border StrokeShape="RoundRectangle 10" Padding="15" BackgroundColor="#F1F5F9" Stroke="#CBD5E1">
                     <VerticalStackLayout Spacing="10">
                         <Label Text="Enroll a Student:" FontSize="14" FontAttributes="Bold" TextColor="#334155" />
@@ -188,7 +189,7 @@
                             <Picker x:Name="AvailableStudentsPicker" 
                                     Grid.Column="0" 
                                     Title="Select student..." 
-                                    ItemDisplayBinding="{Binding Name}" 
+                                    ItemDisplayBinding="{Binding Name, StringFormat='{0} (ID: {Binding Id})'}" 
                                     BackgroundColor="White" />
                             
                             <Button Grid.Column="1" 
