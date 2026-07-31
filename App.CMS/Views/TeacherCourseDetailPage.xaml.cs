@@ -207,8 +207,17 @@ namespace App.CMS.Views
                 _editingAssignment.TotalPoints = TotalPoints;
                 _editingAssignment.DueDate = DueDateEntry.Date;
 
-                string itemType = _isCreatingQuiz ? "Quiz" : "Assignment";
-                await DisplayAlert("Success", $"{itemType} '{_editingAssignment.Name}' updated successfully.", "OK");
+                bool success = await SiteServiceProxy.Current.UpdateCourseAsync(_selectedCourse);
+
+                if (success)
+                {
+                    string itemType = _isCreatingQuiz ? "Quiz" : "Assignment";
+                    await DisplayAlert("Success", $"{itemType} '{_editingAssignment.Name}' updated successfully.", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Failed to update database. Ensure API.CMS is running.", "OK");
+                }
             }
             else // new assignment or quiz
             {
@@ -229,12 +238,25 @@ namespace App.CMS.Views
 
                 _selectedCourse.Assignments.Add(newAssignment);
 
-                string itemType = _isCreatingQuiz ? "Quiz" : "Assignment";
-                await DisplayAlert("Success", $"{itemType} '{newAssignment.Name}' added to course.", "OK");
+                // register new assg/quiz to mongodb
+                bool success = await SiteServiceProxy.Current.UpdateCourseAsync(_selectedCourse);
+
+                if (success)
+                {
+                    string itemType = _isCreatingQuiz ? "Quiz" : "Assignment";
+                    await DisplayAlert("Success", $"{itemType} '{newAssignment.Name}' added to course.", "OK");
+                }
+                else
+                {
+                    // use in memory add if DB write fails
+                    _selectedCourse.Assignments.Remove(newAssignment);
+                    await DisplayAlert("Error", "Failed to save to database. Ensure API.CMS is running.", "OK");
+                }
             }
 
             ResetAssignmentForm();
             RefreshAssignmentsView();
+        
         }
 
         //editing of an assignment
@@ -334,6 +356,9 @@ namespace App.CMS.Views
                 return;
             }
 
+            // list initialized on current course
+            _selectedCourse.Modules ??= new List<Module>();
+
             if (_editingModule != null)
             {
                 // Update Module
@@ -343,7 +368,7 @@ namespace App.CMS.Views
             }
             else
             {
-                //adds module with auto increment ID
+                // adds module with auto increment ID
                 int nextId = _selectedCourse.Modules.Any() 
                     ? _selectedCourse.Modules.Max(m => m.Id) + 1 : 1;
 
@@ -887,6 +912,8 @@ namespace App.CMS.Views
                 _selectedCourse.GradeScaleD = d;
 
                 await DisplayAlert("Success", "Grade ranges updated!", "OK");
+
+                RefreshGradebookView();
             }
             else
             {

@@ -8,7 +8,7 @@ namespace App.CMS.Views
 {
     public partial class CourseDetailPage : ContentPage
     {
-        private readonly Course _selectedCourse;
+        private Course _selectedCourse;
         private readonly Student _selectedStudent;
         private Assignment _currentActiveAssignment;
         private string? _selectedFileName;
@@ -26,21 +26,32 @@ namespace App.CMS.Views
         }
 
         //method for updated announcements
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
 
-            //Fetch the latest version of the course from the  SiteserviceProxy
-            var updatedCourse = SiteServiceProxy.Current?.GetCourses().FirstOrDefault(c => c.Id == _selectedCourse.Id);
+            // update course data (assignments, grades, announcements) from Mdb
+            await SiteServiceProxy.Current.RefreshCoursesFromDatabaseAsync();
 
-            if (updatedCourse != null)
+            // get current course
+            if (_selectedCourse != null)
             {
-                //synchronize announcements list
-                _selectedCourse.Announcements = updatedCourse.Announcements;
-            }
+                _selectedCourse = SiteServiceProxy.Current.GetCourseById(_selectedCourse.Id);
 
-            
-            PopulateCourseDetails();
+                if (_selectedCourse != null && SiteServiceProxy.Current.CurrentUser is Student currentStudent)
+                {
+                    
+                    AssignmentsListView.ItemsSource = null;
+                    AssignmentsListView.ItemsSource = _selectedCourse.Assignments;
+
+                    // calculate overall grade
+                    double percentage = SiteServiceProxy.Current.CalculateStudentOverallGrade(_selectedCourse.Id, currentStudent.Id);
+                    string letterGrade = SiteServiceProxy.Current.GetStudentLetterGrade(_selectedCourse.Id, currentStudent.Id);
+
+                    // updatete Grade badge
+                    OverallGradeLabel.Text = $"{percentage:F1}% ({letterGrade})";
+                }
+            }
         }
 
         private void PopulateCourseDetails()
@@ -284,6 +295,8 @@ namespace App.CMS.Views
             double overallPercentage = SiteServiceProxy.Current.CalculateStudentOverallGrade(_selectedCourse.Id, _selectedStudent.Id);
             string letterGrade = SiteServiceProxy.Current.GetStudentLetterGrade(_selectedCourse.Id, _selectedStudent.Id);
 
+            AssignmentsListView.ItemsSource = null;
+            AssignmentsListView.ItemsSource = _selectedCourse.Assignments;
             // update student view
             if (LetterGradeLabel != null)
             {
@@ -305,7 +318,7 @@ namespace App.CMS.Views
             // compute overall grade and letter grade
             double overallPercentage = SiteServiceProxy.Current.CalculateStudentOverallGrade(liveCourse.Id, currentStudent.Id);
             string overallLetter = SiteServiceProxy.Current.GetStudentLetterGrade(liveCourse.Id, currentStudent.Id);
-            
+
             //Update for the top right letter badge
             if (LetterGradeLabel != null)
             {
@@ -316,11 +329,11 @@ namespace App.CMS.Views
                 NumericGradeLabel.Text = $"{overallPercentage:F1}%";
             }
 
-            //updates header Card
+            
+            // Update badge and scale breakdown card
             OverallGradeLabel.Text = $"{overallPercentage:F1}% ({overallLetter})";
             GradingScaleBreakdownLabel.Text = $"Scale: A ≥ {liveCourse.GradeScaleA}% | B ≥ {liveCourse.GradeScaleB}% | C ≥ {liveCourse.GradeScaleC}% | D ≥ {liveCourse.GradeScaleD}%";
-
-            // clears existing table rows
+                        // clears existing table rows
             StudentGradebookRowsContainer.Children.Clear();
 
             var assignments = liveCourse.Assignments ?? new List<Assignment>();

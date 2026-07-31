@@ -72,7 +72,7 @@ namespace App.CMS.Views
                     $"Leave feedback for {submission.StudentName}:",
                     initialValue: submission.Comment ?? string.Empty);
 
-                //Update model properties
+                //Updated model properties
                 submission.Grade = numericGrade;
                 submission.Comment = commentResult?.Trim();
 

@@ -34,6 +34,7 @@ namespace App.CMS.Views
             {
                 StudentPicker.ItemsSource = null;
                 StudentPicker.ItemsSource = SiteServiceProxy.Current.GetStudents();
+                
             }
         }
 
