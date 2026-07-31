@@ -12,6 +12,19 @@ namespace App.CMS.Views
             InitializeComponent();
         }
 
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+
+
+            await SiteServiceProxy.Current.RefreshCoursesFromDatabaseAsync();
+            
+
+            TeacherCoursesCollectionView.ItemsSource = null;
+            TeacherCoursesCollectionView.ItemsSource = SiteServiceProxy.Current.Courses;
+        }
+
+
 
         private async Task LoadTeacherCoursesAsync()
         {
@@ -80,7 +93,6 @@ namespace App.CMS.Views
 
             var newCourse = new Course
             {
-                //Id = 0 so AddCourseAsync generates a clean sequential ID
                 Id = 0, 
                 Name = CourseNameEntry.Text.Trim(),
                 Code = CourseCodeEntry.Text.Trim(),

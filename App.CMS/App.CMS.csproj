@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- SINGLE TARGET FOR FAST WINDOWS DEV BUILD TIMES  -->
+    <!-- SINGLE TARGET FOR FAST WINDOWS DEV BUILD TIMES -->
     <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
 
     <OutputType>Exe</OutputType>
