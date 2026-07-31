@@ -189,7 +189,7 @@
                             <Picker x:Name="AvailableStudentsPicker" 
                                     Grid.Column="0" 
                                     Title="Select student..." 
-                                    ItemDisplayBinding="{Binding Name, StringFormat='{0} (ID: {Binding Id})'}" 
+                                    ItemDisplayBinding="{Binding DisplayNameWithId}"
                                     BackgroundColor="White" />
                             
                             <Button Grid.Column="1" 

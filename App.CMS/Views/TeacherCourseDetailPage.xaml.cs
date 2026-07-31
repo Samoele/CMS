@@ -17,6 +17,27 @@ namespace App.CMS.Views
             RefreshRosterView();
         }
 
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+
+            //refresh student list 
+            await SiteServiceProxy.Current.RefreshStudentsFromDatabaseAsync();
+
+            // then refresh students so roster matches users list
+            await SiteServiceProxy.Current.RefreshCoursesFromDatabaseAsync();
+
+            // 3. Populate enrollment picker and refresh current course UI
+            if (AvailableStudentsPicker != null)
+            {
+                AvailableStudentsPicker.ItemsSource = null;
+                AvailableStudentsPicker.ItemsSource = SiteServiceProxy.Current.GetStudents();
+            }
+
+            // Refresh roster display for current course
+            RefreshRosterView();
+        }
+
         private void PopulateCourseHeader()
         {
             CourseNameLabel.Text = _selectedCourse.Name;
@@ -41,15 +62,38 @@ namespace App.CMS.Views
 
         private async void OnEnrollStudentClicked(object sender, EventArgs e)
         {
-            if (AvailableStudentsPicker.SelectedItem is Student studentToEnroll)
+            if (_selectedCourse == null) return;
+
+            var selectedStudent = AvailableStudentsPicker.SelectedItem as Student;
+            if (selectedStudent == null)
             {
-                SiteServiceProxy.Current.EnrollStudent(_selectedCourse.Id, studentToEnroll.Id);
-                await DisplayAlert("Success", $"{studentToEnroll.Name} enrolled into {_selectedCourse.Code}.", "OK");
+                await DisplayAlert("Selection Error", "Please select a student to enroll.", "OK");
+                return;
+            }
+
+            //checks if student is already in roster (comparing by ID)
+            if (_selectedCourse.Roster.Any(s => s.Id == selectedStudent.Id))
+            {
+                await DisplayAlert("Notice", $"{selectedStudent.Name} is already enrolled in this course.", "OK");
+                return;
+            }
+
+            //add student to course roster list
+            _selectedCourse.Roster.Add(selectedStudent);
+
+            // update course on database
+            bool success = await SiteServiceProxy.Current.UpdateCourseAsync(_selectedCourse);
+
+            if (success)
+            {
+                await DisplayAlert("Success", $"{selectedStudent.Name} enrolled and saved to database!", "OK");
+                
+                //refresh app display
                 RefreshRosterView();
             }
             else
             {
-                await DisplayAlert("Selection Required", "Please pick a student to enroll.", "OK");
+                await DisplayAlert("Error", "Failed to update course roster in MongoDB Atlas.", "OK");
             }
         }
 

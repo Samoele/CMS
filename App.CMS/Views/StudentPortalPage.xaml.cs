@@ -27,6 +27,7 @@ namespace App.CMS.Views
 
             //fetch live student records from db through ssproxy
             await SiteServiceProxy.Current.RefreshStudentsFromDatabaseAsync();
+            await SiteServiceProxy.Current.RefreshCoursesFromDatabaseAsync();
 
             //bind picker control to display students
             if (StudentPicker != null)
