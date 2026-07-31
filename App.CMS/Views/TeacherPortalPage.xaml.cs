@@ -13,14 +13,14 @@ namespace App.CMS.Views
         }
 
 
-        private void LoadTeacherCourses()
+        private async Task LoadTeacherCoursesAsync()
         {
             //fetch courses from site service proxy
-            var courses = SiteServiceProxy.Current?.GetCourses() ?? new List<Course>();
+            await SiteServiceProxy.Current.RefreshCoursesFromDatabaseAsync();
 
             // Assigning null and then to courses makes MAUI update the TeacherCoursesCollectionView update immediately
             TeacherCoursesCollectionView.ItemsSource = null;
-            TeacherCoursesCollectionView.ItemsSource = courses;
+            TeacherCoursesCollectionView.ItemsSource = SiteServiceProxy.Current.GetCourses();
         }
 
 
@@ -28,7 +28,7 @@ namespace App.CMS.Views
         {
             AddCourseFormCard.IsVisible = false;
             CoursesSection.IsVisible = true;
-            LoadTeacherCourses();
+            LoadTeacherCoursesAsync();
         }
 
 
@@ -78,13 +78,10 @@ namespace App.CMS.Views
                 return;
             }
 
-            //find active courses and calculate id based on max ID
-            var courses = SiteServiceProxy.Current?.GetCourses() ?? new List<Course>();
-            int nextId = courses.Any() ? courses.Max(c => c.Id) + 1 : 1;
-
             var newCourse = new Course
             {
-                Id = nextId,
+                //Id = 0 so AddCourseAsync generates a clean sequential ID
+                Id = 0, 
                 Name = CourseNameEntry.Text.Trim(),
                 Code = CourseCodeEntry.Text.Trim(),
                 Description = CourseDescriptionEntry.Text?.Trim() ?? string.Empty,
@@ -93,43 +90,55 @@ namespace App.CMS.Views
                 Roster = new List<Student>()
             };
 
-            //adding course using siteserviceproxy 
-            SiteServiceProxy.Current?.AddCourse(newCourse); 
+            //add course to database on mongodb
+            bool success = await SiteServiceProxy.Current.AddCourseAsync(newCourse); 
 
-            await DisplayAlert("Success", $"Course '{newCourse.Code} - {newCourse.Name}' created successfully!", "OK");
+            if (success)
+            {
+                await DisplayAlert("Success", $"Course '{newCourse.Code} - {newCourse.Name}' created successfully!", "OK");
 
-            //clear form fields
-            CourseNameEntry.Text = string.Empty;
-            CourseCodeEntry.Text = string.Empty;
-            CourseDescriptionEntry.Text = string.Empty;
+                CourseNameEntry.Text = string.Empty;
+                CourseCodeEntry.Text = string.Empty;
+                CourseDescriptionEntry.Text = string.Empty;
 
-            // change view back to list and refresh with loadteachercourses() existing method
-            AddCourseFormCard.IsVisible = false;
-            CoursesSection.IsVisible = true;
-            
-            // load courses
-            LoadTeacherCourses();
+                
+                AddCourseFormCard.IsVisible = false;
+                CoursesSection.IsVisible = true;
+                
+                // Refresh local UI view
+                await LoadTeacherCoursesAsync();
+            }
+            else
+            {
+                await DisplayAlert("Error", "Failed to save course to Database. Ensure API.CMS is running.", "OK");
+            }
         }
 
+        
         private async void OnDeleteCourseClicked(object sender, EventArgs e)
         {
-            if (sender is Button button && button.CommandParameter is Course courseToDelete)
+            if (sender is Button button && button.BindingContext is Course courseToDelete)
             {
                 bool confirm = await DisplayAlert(
-                    "⚠️ Confirm Deletion",
-                    $"Are you sure you want to permanently delete course '{courseToDelete.Code} - {courseToDelete.Name}'?",
-                    "Delete",
-                    "Cancel");
+                    "Confirm Delete", 
+                    $"Are you sure you want to delete '{courseToDelete.Code} - {courseToDelete.Name}'?", 
+                    "Yes", 
+                    "No");
 
                 if (confirm)
                 {
-                    // delete course using siteServiceProxy
-                    SiteServiceProxy.Current?.DeleteCourse(courseToDelete.Id); //note: deletion must always be with ID
+                    //removes from database
+                    bool success = await SiteServiceProxy.Current.DeleteCourseAsync(courseToDelete.Id);
 
-                    await DisplayAlert("Deleted", $"Course '{courseToDelete.Code}' removed.", "OK");
-                    
-                    //reload courses
-                    LoadTeacherCourses();
+                    if (success)
+                    {
+                        await DisplayAlert("Deleted", "Course removed successfully.", "OK");
+                        await LoadTeacherCoursesAsync();
+                    }
+                    else
+                    {
+                        await DisplayAlert("Error", "Could not delete course from database.", "OK");
+                    }
                 }
             }
         }
